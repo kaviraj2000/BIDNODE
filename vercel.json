@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "name": "bid-node",
+  "builds": [
+    { 
+      "src": "app.js", 
+      "use": "@vercel/node",
+      "config": {
+        "maxDuration": 10,
+        "memory": 3000
+      }
+    }
+  ],
+  "routes": [
+    { "src": "/(.*)", "dest": "app.js" }
+  ]
+}
