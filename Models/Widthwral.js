@@ -7,7 +7,8 @@ const paymentschema = mongoose.Schema({
   },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Signup'
+    ref: 'Signup',
+    required: true
   },
   amount: {
     type: Number,

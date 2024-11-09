@@ -53,7 +53,7 @@ const successAdd = catchAsync(async (req, res, next) => {
         const record = new withdrawal({
             transcation_id,
             amount,
-            user_id: userId,
+            userId: userId,
             payment_status: 1,
         });
         await record.save();
@@ -72,10 +72,10 @@ const successAdd = catchAsync(async (req, res, next) => {
 
 const AdminsuccessAdd = catchAsync(async (req, res, next) => {
     try {
-        const { user_id, amount } = req.body;
+        const { userId, amount } = req.body;
 
         // Find the user by their ID
-        const user = await User.findById(user_id);
+        const user = await User.findById(userId);
 
         if (!user) {
             return res.status(404).json({
@@ -100,7 +100,7 @@ const AdminsuccessAdd = catchAsync(async (req, res, next) => {
         // Create a new withdrawal record
         const record = new withdrawal({
             amount: amountToAdd,
-            user_id: user_id,
+            userId: userId,
             payment_status: 1
         });
         await record.save();
@@ -187,8 +187,8 @@ const withdrawalAdd = catchAsync(async (req, res, next) => {
         const record = new withdrawal({
             upi_id,
             amount,
-            payment_Wid_status:"inactive",
-            user_id: userId,
+            payment_Wid_status: "inactive",
+            userId: userId,
             payment_status: 0,
         });
         await record.save();
@@ -207,11 +207,11 @@ const withdrawalAdd = catchAsync(async (req, res, next) => {
 
 const adminwithdrawalAdd = catchAsync(async (req, res, next) => {
     try {
-        const { user_id, amount } = req.body;
-        if (!user_id || !amount) {
+        const { userId, amount } = req.body;
+        if (!userId || !amount) {
             return res.status(400).json({ message: "All fields are required!" });
         }
-        const user = await User.findById({ _id: user_id });
+        const user = await User.findById({ _id: userId });
 
         if (!user) {
             return res.status(404).json({
@@ -241,7 +241,7 @@ const adminwithdrawalAdd = catchAsync(async (req, res, next) => {
         // Create a new withdrawal record
         const record = new withdrawal({
             amount,
-            user_id: user_id,
+            userId: userId,
             payment_status: 0,
         });
         await record.save();
@@ -282,10 +282,12 @@ const amountget = catchAsync(async (req, res) => {
     }
 });
 
+
+
 const WidthrawalRate = catchAsync(async (req, res) => {
     try {
 
-        const records = await withdrawal.find({payment_status : 0});
+        const records = await withdrawal.find({ payment_status: 0 }).populate({ userId });
         if (!records || records.length === 0) {
             return res.status(404).json({
                 status: false,
@@ -306,9 +308,37 @@ const WidthrawalRate = catchAsync(async (req, res) => {
     }
 });
 
+const WidthrawalPayment = catchAsync(async (req, res) => {
+    try {
+        const records = await withdrawal.find({ payment_status: 0 })
+            .populate('userId'); 
+            console.log("records",records)
+        if (!records || records.length === 0) {
+            return res.status(404).json({
+                status: false,
+                message: "No records found",
+            });
+        }
+
+
+        res.status(200).json({
+            status: true,
+            data: records,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            status: false,
+            message: "Internal Server Error"
+        });
+    }
+});
+
+
 
 
 module.exports = {
+    WidthrawalPayment,
     WidthrawalRate,
     withdrawalAdd,
     successAdd,
