@@ -9,5 +9,7 @@ router.get("/marketlistupdate", Marketing.MarketUpdate);
 router.get(`/marketlist/:id`, Marketing.MarketListId);
 router.post("/marketdelete", Marketing.MarketDelete)
 router.post("/marketupdate", Marketing.MarketUpdate)
+router.post("/marketupdatedata", Marketing.MarketUpdateData)
+
 
 module.exports = router

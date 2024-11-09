@@ -310,3 +310,59 @@ exports.MarketUpdate = catchAsync(async (req, res, next) => {
     }
 });
 
+
+exports.MarketUpdateData = catchAsync(async (req, res, next) => {
+    try {
+        const { Id, market_status } = req.body;
+
+        // Check if Id or market_status is missing
+        if (!Id || !market_status) {
+            return res.status(400).json({
+                status: false,
+                message: "Market ID and market status are required.",
+            });
+        }
+
+        // Find the market by ID
+        const marketRecord = await marketing.findById(Id);
+        
+        if (!marketRecord) {
+            return res.status(404).json({
+                status: false,
+                message: "Market not found!",
+            });
+        }
+
+        // Update the market status
+        const updatedRecord = await marketing.findByIdAndUpdate(
+            Id,
+            {
+                market_status: market_status, // Directly update the market status
+            },
+            { new: true, runValidators: true }
+        );
+
+        // Check if the record exists after update
+        if (!updatedRecord) {
+            return res.status(404).json({
+                status: false,
+                message: "Market not found during update.",
+            });
+        }
+
+        // Successfully updated
+        res.status(200).json({
+            status: true,
+            data: updatedRecord,
+            message: "Market status updated successfully.",
+        });
+    } catch (error) {
+        console.error("Error updating market record:", error);
+        res.status(500).json({
+            status: false,
+            message: "An error occurred while updating the market. Please try again later.",
+        });
+    }
+});
+
+
