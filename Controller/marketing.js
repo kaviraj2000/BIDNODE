@@ -35,7 +35,7 @@ exports.MarketingAdd = catchAsync(async (req, res, next) => {
             close_time,
             name,
             market_type,
-            result :"XXX-XX-XXX"
+            result: "XXX-XX-XXX"
         });
 
 
@@ -56,10 +56,14 @@ exports.MarketingAdd = catchAsync(async (req, res, next) => {
 });
 
 
+const moment = require('moment');
+
 exports.MarketList = catchAsync(async (req, res) => {
     try {
-        // Fetch records and sort by creation date in descending order (latest first)
+        // Fetch records from the database
         const records = await marketing.find({});
+
+        // If no records found, return a 404 response
         if (!records || records.length === 0) {
             return res.status(404).json({
                 status: false,
@@ -67,29 +71,45 @@ exports.MarketList = catchAsync(async (req, res) => {
             });
         }
 
-        const currentDateTime = new Date(); // Get the current date and time
+        const currentDateTime = moment(); // Get the current date and time using Moment.js
 
         // Update the market status based on open_time and close_time
         const updatedRecords = records.map(record => {
-            const openTimeToday = new Date();
-            const closeTimeToday = new Date();
+            const openTimeToday = moment();
+            const closeTimeToday = moment();
+
+            // Split the open_time and close_time strings to get hours and minutes
             const [openHours, openMinutes] = record.open_time.split(':');
             const [closeHours, closeMinutes] = record.close_time.split(':');
 
-            openTimeToday.setHours(openHours, openMinutes, 0); // Set hours and minutes for open_time
-            closeTimeToday.setHours(closeHours, closeMinutes, 0); // Set hours and minutes for close_time
+            // Set today's open time and close time using Moment.js
+            openTimeToday.set('hours', openHours).set('minutes', openMinutes).set('seconds', 0); // Set hours and minutes for open_time
+            closeTimeToday.set('hours', closeHours).set('minutes', closeMinutes).set('seconds', 0); // Set hours and minutes for close_time
+
+            // If close_time is earlier than open_time, assume it crosses to the next day (e.g., 22:00 to 06:00)
+            if (closeTimeToday.isBefore(openTimeToday)) {
+                closeTimeToday.add(1, 'days'); // Add one day to the close_time to handle overnight market
+            }
 
             // Determine the market status based on the current time
-            let status = record.market_status; // Retain existing status initially
+            let status = "inactive"; // Default status is inactive
 
-            if (currentDateTime > closeTimeToday) {
-                status = "inactive"; // Market is inactive after close_time
-            } else if (currentDateTime <= closeTimeToday) {
-                status = "active"; // Market is active before or equal to close_time
+            // If the current time is between open_time and close_time, set the market status as active
+            if (currentDateTime.isBetween(openTimeToday, closeTimeToday, null, '[)')) {
+                status = "active"; // Market is active during this time
+            }
+
+            // Optionally, check if the current date has changed (for resetting status)
+            const currentDate = currentDateTime.format('YYYY-MM-DD'); // Get the current date as 'YYYY-MM-DD'
+            const marketDate = record.create_date ? moment(record.create_date).format('YYYY-MM-DD') : null; // Get the market's creation date
+
+            // If it's a new day and the date has changed, we reset the market status to active
+            if (currentDate !== marketDate) {
+                status = "active"; // Reset to active if the day has changed
             }
 
             return {
-                ...record._doc, // Spread existing record properties
+                ...record._doc, // Spread the existing record properties
                 market_status: status // Update the market status
             };
         });
@@ -99,6 +119,7 @@ exports.MarketList = catchAsync(async (req, res) => {
             data: updatedRecords,
             message: "Markets fetched successfully.",
         });
+
     } catch (error) {
         console.error("Error fetching markets:", error);
         res.status(500).json({
@@ -107,6 +128,8 @@ exports.MarketList = catchAsync(async (req, res) => {
         });
     }
 });
+
+
 
 
 exports.MarketListStatus = catchAsync(async (req, res) => {
@@ -323,7 +346,7 @@ exports.MarketUpdateData = catchAsync(async (req, res, next) => {
 
         // Find the market by ID
         const marketRecord = await marketing.findById(Id);
-        
+
         if (!marketRecord) {
             return res.status(404).json({
                 status: false,
