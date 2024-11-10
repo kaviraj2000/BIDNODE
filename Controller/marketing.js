@@ -74,7 +74,9 @@ exports.MarketList = catchAsync(async (req, res) => {
         const currentDateTime = moment(); // Get the current date and time using Moment.js
 
         // Update the market status based on open_time and close_time
-        const updatedRecords = records.map(record => {
+        const updatedRecords = [];
+
+        for (let record of records) {
             const openTimeToday = moment();
             const closeTimeToday = moment();
 
@@ -108,26 +110,33 @@ exports.MarketList = catchAsync(async (req, res) => {
                 status = "active"; // Reset to active if the day has changed
             }
 
-            return {
+            // Update the record with the new market status
+            const updatedRecord = {
                 ...record._doc, // Spread the existing record properties
                 market_status: status // Update the market status
             };
-        });
+
+            // Save the updated market status to the database
+            await marketing.findByIdAndUpdate(record._id, { market_status: status });
+
+            updatedRecords.push(updatedRecord);
+        }
 
         res.status(200).json({
             status: true,
             data: updatedRecords,
-            message: "Markets fetched successfully.",
+            message: "Markets fetched and statuses updated successfully.",
         });
 
     } catch (error) {
-        console.error("Error fetching markets:", error);
+        console.error("Error fetching and updating markets:", error);
         res.status(500).json({
             status: false,
             message: "Internal Server Error. Please try again later.",
         });
     }
 });
+
 
 
 
