@@ -9,7 +9,7 @@ router.post("/signup", signup);
 router.post("/getotp", getotpsingup);
 
 // User Login Route
-router.post("/login", login);
+router.post("/login_api", login);
 
 // List Users Route (Requires Authentication)
 router.get("/list", userlist);
