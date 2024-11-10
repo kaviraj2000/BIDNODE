@@ -56,7 +56,6 @@ exports.MarketingAdd = catchAsync(async (req, res, next) => {
 });
 
 
-const moment = require('moment');
 const moment = require('moment-timezone');
 
 exports.MarketList = catchAsync(async (req, res) => {
