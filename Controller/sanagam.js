@@ -12,7 +12,6 @@ const sumOfDigits = (number) => {
 exports.SangamAdd = catchAsync(async (req, res, next) => {
     try {
         const userId = req?.user?._id;
-        console.log("Sangam",Sangam)
         const { type, status, date, open_panna, close_panna, bid_point, marketId } = req.body;
         if (!userId) {
             return res.status(400).json({

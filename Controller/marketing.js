@@ -35,7 +35,7 @@ exports.MarketingAdd = catchAsync(async (req, res, next) => {
             close_time,
             name,
             market_type,
-            result
+            result :"XXX-XX-XXX"
         });
 
 
@@ -60,7 +60,6 @@ exports.MarketList = catchAsync(async (req, res) => {
     try {
         // Fetch records and sort by creation date in descending order (latest first)
         const records = await marketing.find({}).sort({ create_date: -1 });
-console.log("records",records)
         if (!records || records.length === 0) {
             return res.status(404).json({
                 status: false,
@@ -239,7 +238,6 @@ exports.MarketDelete = catchAsync(async (req, res, next) => {
 
 exports.MarketUpdate = catchAsync(async (req, res, next) => {
     try {
-        console.log("re",req.body)
         const { Id, market_status, open_time, close_time, name, market_type, result, game_rate } = req.body;
 
         if (!Id) {
@@ -287,7 +285,6 @@ exports.MarketUpdate = catchAsync(async (req, res, next) => {
             },
             { new: true, runValidators: true }
         );
-console.log(updatedRecord)
         // Check if the record exists
         if (!updatedRecord) {
             return res.status(404).json({

@@ -229,14 +229,21 @@ exports.ResultAdd = async (req, res) => {
         }
 
         // If no match is found, use the result from marketId if available, or fallback to formatted number
+        // Assuming `number` is a variable containing the number whose digits we want to sum
+      
+
         if (!pannaWin && !sangamWin) {
             const market = await Market.findById(marketId); // Fetch the market to get and update the result directly
-            console.log("market", market);
-        
+
+            const numberSum = number
+            .toString()          // Convert number to string
+            .split('')           // Split into an array of characters (digits)
+            .reduce((acc, digit) => acc + parseInt(digit), 0);  // Sum the digits
+console.log(numberSum)
             if (market) {
                 // Set resultData.result to market's result if it already exists
-                resultData.result = market.result || (session === 'open' ? `${number}-xx-xxx` : `xxx-xx-${number}`);
-                
+                resultData.result = market.result || (session === 'open' ? `${number}-${numberSum}x-xxx` : `xxx-x${numberSum}-${number}`);
+                console.log("resultData.result", resultData.result)
                 // Update the market result if it wasn't already set
                 if (!market.result) {
                     market.result = resultData.result;
@@ -244,13 +251,16 @@ exports.ResultAdd = async (req, res) => {
                 }
             } else {
                 // Format result based on session if market is not found
-                resultData.result = session === 'open' ? `${number}-xx-xxx` : `xxx-xx-${number}`;
+                resultData.result = session === 'open' ? `${number}-${numberSum}x-xxx` : `xxx-x${numberSum}-${number}`;
             }
         }
+
+
+
         // Check if userId is set before saving
         if (resultData.userId) {
             const data = new ResultModel(resultData);
-            console.log('data',data)
+            console.log('data', data)
             const savedResult = await data.save();
 
             return res.status(200).json({
@@ -261,7 +271,7 @@ exports.ResultAdd = async (req, res) => {
         }
 
         // If no match is found in Panna or Sangam, save the result with "loser" status using the market result or formatted result
-        const data = new ResultModel(resultData);console.log(data)
+        const data = new ResultModel(resultData); console.log(data)
         const savedResult = await data.save();
 
         return res.status(200).json({
@@ -319,23 +329,23 @@ exports.ResultAddMarket = async (req, res) => {
             return res.status(400).json({ message: "Market ID is required." });
         }
 
-        const market = await Market.findById(marketId); 
+        const market = await Market.findById(marketId);
 
         if (!market) {
             return res.status(404).json({ message: "Market not found." });
         }
 
-        const sangamData = await Sangam.find({ marketId }); 
+        const sangamData = await Sangam.find({ marketId });
 
         const combinedData = {
-            marketName: market.name, 
-            sangam: sangamData 
+            marketName: market.name,
+            sangam: sangamData
         };
 
         return res.status(200).json({
             status: 200,
             message: "Result fetched successfully.",
-            data: combinedData 
+            data: combinedData
         });
 
     } catch (error) {
@@ -357,12 +367,9 @@ exports.ResultUser = async (req, res) => {
 
         const Pannamodel = await ResultModel.find({ userId }).select('win_manage betdate session bit_number marketId win_amount panaaModal');
 
-        console.log(Pannamodel);
         const marketIds = Pannamodel.map(panna => panna.marketId);
-        console.log("marketIds", marketIds);
 
         const markets = await Marketing.find({ _id: { $in: marketIds } }).select('name type');
-        console.log(markets);
 
         // Create a mapping of markets by ID
         const marketMap = {};
@@ -408,11 +415,3 @@ exports.ResultUser = async (req, res) => {
         res.status(500).json({ message: "An error occurred while fetching the result." });
     }
 };
-
-
-
-
-
-
-
-
