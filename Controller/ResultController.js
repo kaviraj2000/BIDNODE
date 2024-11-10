@@ -23,6 +23,112 @@ function getDigitalRoot(number) {
     return sum;
 }
 
+// exports.ResultAdd = async (req, res) => {
+//     try {
+//         const { session, number, betdate, marketId, bit_number } = req.body;
+
+//         const generatedBitNumber = bit_number || Math.floor(100000 + Math.random() * 900000); // 6-digit random number
+//         const sumOfDigits = getDigitalRoot(number); // Use the digital root function
+
+//         // Populate marketId in both Panna and Sangam models to access market result
+//         const Pannamodel = await Panna.find({}).populate('userId').populate('marketId');
+//         const SangamModel = await Sangam.find({}).populate('userId').populate('marketId');
+
+       
+//         const resultData = {
+//             session,
+//             result: null,
+//             number,
+//             betdate,
+//             marketId,
+//             bit_number: generatedBitNumber,
+//             panaaModal: null,
+//             win_amount: 0,
+//             sangamModal: null,
+//             userId: null, // This should be set during the matching process
+//             win_manage: "loser", // Default value is "loser"
+//         };
+
+//         let pannaWin = false;
+//         let sangamWin = false;
+
+//         // Check for a match in the Panna model
+//         for (const panna of Pannamodel) {
+//             if ((session === 'open' && panna.status === true) || (session === 'close' && panna.status === false)) {
+//                 if (panna.point === sumOfDigits) {
+//                     resultData.panaaModal = panna;
+//                     resultData.userId = panna._id; // Set userId from matched Panna
+//                     resultData.result = panna.marketId.result; // Use result from marketId in Panna
+//                     pannaWin = true;
+//                     break; // Break once a match is found
+//                 }
+//             }
+//         }
+
+//         // Check for a match in the Sangam model
+//         for (const sangam of SangamModel) {
+//             if ((session === 'open' && sangam.status === true) || (session === 'close' && sangam.status === false)) {
+//                 if (sangam.bid_point === number) {
+//                     resultData.sangamModal = sangam;
+//                     resultData.userId = sangam._id; // Set userId from matched Sangam
+//                     resultData.result = sangam.marketId.result; // Use result from marketId in Sangam
+//                     sangamWin = true;
+//                     break; // Break once a match is found
+//                 }
+//             }
+//         }
+
+//         // If a win is detected, update win_manage to "winner"
+//         if (pannaWin || sangamWin) {
+//             resultData.win_manage = "winner";
+//         }
+
+//         // If no match is found, use the result from marketId if available, or fallback to formatted number
+//         const numberSum = getDigitalRoot(number); // Apply digital root function here
+//         console.log("numberSum", numberSum);
+//         if (!pannaWin && !sangamWin) {
+//             const market = await Market.findById(marketId); // Fetch the market to get and update the result directly
+//             resultData.result = market.result || (session === 'open' ? `${number}-${numberSum}x-xxx` : `xxx-x${numberSum}-${number}`);
+//             console.log("resultData.resultaa", resultData.result);
+//             if (!market.result) {
+//                 market.result = resultData.result;
+//                 await market.save();
+//             } else {
+//                 resultData.result = session === 'open' ? `${number}-${numberSum}x-xxx` : `xxx-x${numberSum}-${number}`;
+//                 console.log("resultData.resultaaqqqq", resultData.result);
+//             }
+//         }
+
+//         // Check if userId is set before saving
+//         if (resultData.userId) {
+//             const data = new ResultModel(resultData);
+//             console.log('data11', data);
+//             const savedResult = await data.save();
+
+//             return res.status(200).json({
+//                 status: 200,
+//                 message: "Result saved successfully.",
+//                 data: savedResult
+//             });
+//         }
+
+//         // If no match is found in Panna or Sangam, save the result with "loser" status using the market result or formatted result
+//         const data = new ResultModel(resultData);
+//         console.log("qq", data);
+//         const savedResult = await data.save();
+
+//         return res.status(200).json({
+//             status: 200,
+//             message: "Result saved",
+//             data: savedResult
+//         });
+
+//     } catch (error) {
+//         console.error("Error saving result:", error);
+//         res.status(500).json({ message: "An error occurred while saving the result." });
+//     }
+// };
+
 exports.ResultAdd = async (req, res) => {
     try {
         const { session, number, betdate, marketId, bit_number } = req.body;
@@ -34,7 +140,6 @@ exports.ResultAdd = async (req, res) => {
         const Pannamodel = await Panna.find({}).populate('userId').populate('marketId');
         const SangamModel = await Sangam.find({}).populate('userId').populate('marketId');
 
-       
         const resultData = {
             session,
             result: null,
@@ -86,23 +191,25 @@ exports.ResultAdd = async (req, res) => {
         // If no match is found, use the result from marketId if available, or fallback to formatted number
         const numberSum = getDigitalRoot(number); // Apply digital root function here
         console.log("numberSum", numberSum);
+
         if (!pannaWin && !sangamWin) {
             const market = await Market.findById(marketId); // Fetch the market to get and update the result directly
-            resultData.result = market.result || (session === 'open' ? `${number}-${numberSum}x-xxx` : `xxx-x${numberSum}-${number}`);
-            console.log("resultData.resultaa", resultData.result);
-            if (!market.result) {
-                market.result = resultData.result;
-                await market.save();
+         console.log("market", market)
+            if (market) {
+                    market.result = session === 'open' ? `${number}-${numberSum}x-xxx` : `xxx-x${numberSum}-${number}`;
+                    await market.save();  // Save the updated market with the new result
+                resultData.result = market.result; // Set resultData.result to the market's result
+                console.log("Updated Market Result:", resultData.result);
             } else {
+                // Handle case if market is not found
                 resultData.result = session === 'open' ? `${number}-${numberSum}x-xxx` : `xxx-x${numberSum}-${number}`;
-                console.log("resultData.resultaaqqqq", resultData.result);
             }
         }
 
-        // Check if userId is set before saving
+        // Save result data to the ResultModel
         if (resultData.userId) {
             const data = new ResultModel(resultData);
-            console.log('data11', data);
+            console.log('Saving Result Data:', data);
             const savedResult = await data.save();
 
             return res.status(200).json({
@@ -114,7 +221,7 @@ exports.ResultAdd = async (req, res) => {
 
         // If no match is found in Panna or Sangam, save the result with "loser" status using the market result or formatted result
         const data = new ResultModel(resultData);
-        console.log("qq", data);
+        console.log("Saving loser result:", data);
         const savedResult = await data.save();
 
         return res.status(200).json({
@@ -128,6 +235,7 @@ exports.ResultAdd = async (req, res) => {
         res.status(500).json({ message: "An error occurred while saving the result." });
     }
 };
+
 
 
 exports.ResultList = catchAsync(async (req, res) => {

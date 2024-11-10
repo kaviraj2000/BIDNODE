@@ -73,14 +73,12 @@ exports.MarketList = catchAsync(async (req, res) => {
 
         // Get current date and time (in Asia/Kolkata timezone for consistency)
         const currentDateTime = moment().tz('Asia/Kolkata'); // Ensure you use the correct time zone
-        console.log("Current Time:", currentDateTime.format()); // Log current time for debugging
 
         // Array to hold updated market records
         const updatedRecords = [];
 
         // Loop through each record
         for (let record of records) {
-            console.log(`Processing Market ID: ${record._id} | Name: ${record.name}`);
 
             // Initialize today's open and close times in the specified time zone
             const openTimeToday = moment().tz('Asia/Kolkata');
@@ -99,8 +97,6 @@ exports.MarketList = catchAsync(async (req, res) => {
                 closeTimeToday.add(1, 'days'); // Add one day to close time
             }
 
-            console.log('Open Time:', openTimeToday.format());
-            console.log('Close Time:', closeTimeToday.format());
 
             // Default status is inactive
             let status = "inactive";
@@ -110,7 +106,6 @@ exports.MarketList = catchAsync(async (req, res) => {
                 status = "active"; // Market is active during this time
             }
 
-            console.log(`Market ID: ${record._id} | Status: ${status}`);
 
             // Update the record with the new market status
             const updatedRecord = {
@@ -120,7 +115,6 @@ exports.MarketList = catchAsync(async (req, res) => {
 
             // Save the updated market status to the database
             const updateResult = await marketing.findByIdAndUpdate(record._id, { market_status: status });
-            console.log('Database Update Result:', updateResult);
 
             updatedRecords.push(updatedRecord);  // Add to the updated records array
         }
