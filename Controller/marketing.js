@@ -239,6 +239,7 @@ exports.MarketDelete = catchAsync(async (req, res, next) => {
 
 exports.MarketUpdate = catchAsync(async (req, res, next) => {
     try {
+        console.log("re",req.body)
         const { Id, market_status, open_time, close_time, name, market_type, result, game_rate } = req.body;
 
         if (!Id) {
@@ -286,7 +287,7 @@ exports.MarketUpdate = catchAsync(async (req, res, next) => {
             },
             { new: true, runValidators: true }
         );
-
+console.log(updatedRecord)
         // Check if the record exists
         if (!updatedRecord) {
             return res.status(404).json({
