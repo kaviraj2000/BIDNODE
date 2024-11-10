@@ -190,7 +190,6 @@ exports.ResultAddMarket = async (req, res) => {
 
         const combinedData = {
             marketName: market.name,
-            sangam: sangamData,
             marketResults: marketResult
         };
 
