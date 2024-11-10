@@ -72,10 +72,10 @@ const successAdd = catchAsync(async (req, res, next) => {
 
 const AdminsuccessAdd = catchAsync(async (req, res, next) => {
     try {
-        const { userId, amount } = req.body;
+        const { user_id, amount } = req.body;
 
         // Find the user by their ID
-        const user = await User.findById(userId);
+        const user = await User.findById(user_id);
 
         if (!user) {
             return res.status(404).json({
@@ -100,7 +100,7 @@ const AdminsuccessAdd = catchAsync(async (req, res, next) => {
         // Create a new withdrawal record
         const record = new withdrawal({
             amount: amountToAdd,
-            userId: userId,
+            userId: user_id,
             payment_status: 1
         });
         await record.save();
@@ -207,11 +207,11 @@ const withdrawalAdd = catchAsync(async (req, res, next) => {
 
 const adminwithdrawalAdd = catchAsync(async (req, res, next) => {
     try {
-        const { userId, amount } = req.body;
-        if (!userId || !amount) {
+        const { user_id, amount } = req.body;
+        if (!user_id || !amount) {
             return res.status(400).json({ message: "All fields are required!" });
         }
-        const user = await User.findById({ _id: userId });
+        const user = await User.findById({ _id: user_id });
 
         if (!user) {
             return res.status(404).json({
@@ -241,7 +241,7 @@ const adminwithdrawalAdd = catchAsync(async (req, res, next) => {
         // Create a new withdrawal record
         const record = new withdrawal({
             amount,
-            userId: userId,
+            userId: user_id,
             payment_status: 0,
         });
         await record.save();

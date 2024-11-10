@@ -230,16 +230,16 @@ exports.ResultAdd = async (req, res) => {
 
         // If no match is found, use the result from marketId if available, or fallback to formatted number
         // Assuming `number` is a variable containing the number whose digits we want to sum
-      
+
 
         if (!pannaWin && !sangamWin) {
             const market = await Market.findById(marketId); // Fetch the market to get and update the result directly
 
             const numberSum = number
-            .toString()          // Convert number to string
-            .split('')           // Split into an array of characters (digits)
-            .reduce((acc, digit) => acc + parseInt(digit), 0);  // Sum the digits
-console.log(numberSum)
+                .toString()          // Convert number to string
+                .split('')           // Split into an array of characters (digits)
+                .reduce((acc, digit) => acc + parseInt(digit), 0);  // Sum the digits
+            console.log(numberSum)
             if (market) {
                 // Set resultData.result to market's result if it already exists
                 resultData.result = market.result || (session === 'open' ? `${number}-${numberSum}x-xxx` : `xxx-x${numberSum}-${number}`);
@@ -285,6 +285,9 @@ console.log(numberSum)
         res.status(500).json({ message: "An error occurred while saving the result." });
     }
 };
+
+
+
 
 
 
