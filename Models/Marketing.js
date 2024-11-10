@@ -13,8 +13,8 @@ const marketingSchema = new mongoose.Schema({
   bit_number: {
     type: Number,
   },
-  win_manage:{
-    type:String
+  win_manage: {
+    type: String
   },
   open_time: {
     type: String,
@@ -54,7 +54,7 @@ const marketingSchema = new mongoose.Schema({
   create_date: {
     type: Date,
     default: Date.now,
-}
+  }
 });
 
 const Marketing = mongoose.model('marketing', marketingSchema);

@@ -34,12 +34,12 @@ const resultmongoose = mongoose.Schema({
     bit_number: {
         type: Number,
     },
-    result :{
-        type :String
+    result: {
+        type: String
     },
-    win_amount :{
-        type :Number,
-        default : 0
+    win_amount: {
+        type: Number,
+        default: 0
     },
     win_manage: {
         type: String

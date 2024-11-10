@@ -48,7 +48,7 @@ const signupSchema = mongoose.Schema({
   App_link: String,
   message: String,
   Video_link: String,
-  
+
 });
 
 module.exports = mongoose.model("Signup", signupSchema);

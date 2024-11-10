@@ -9,19 +9,19 @@ const sangamschema = mongoose.Schema({
         type: Boolean,
         required: true,
     },
-    open_digit:{
-        type:Number
+    open_digit: {
+        type: Number
     },
-    close_digit:{
-        type:Number
+    close_digit: {
+        type: Number
     },
     marketId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'marketing'  // Reference to the User model
     },
-    win_manage:{
-        type:String
-      },
+    win_manage: {
+        type: String
+    },
     open_panna: {
         type: Number,
         required: true,

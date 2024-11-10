@@ -4,7 +4,7 @@ const mongoose = require("mongoose")
 const profileschema = mongoose.Schema({
 
 
-   
+
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Signup'  // Reference to the User model
