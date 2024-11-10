@@ -86,6 +86,87 @@ const Marketing = require("../Models/Marketing");
 //     }
 // };
 
+// exports.ResultAdd = async (req, res) => {
+//     try {
+//         const { session, number, betdate, marketId, bit_number } = req.body;
+
+//         const generatedBitNumber = bit_number || Math.floor(100000 + Math.random() * 900000); // 6-digit random number
+//         const sumOfDigits = number.toString().split('').reduce((acc, digit) => acc + parseInt(digit), 0);
+
+//         const Pannamodel = await Panna.find({}).populate('userId').populate('marketId');
+//         const SangamModel = await Sangam.find({}).populate('userId').populate('marketId');
+
+//         if ((!Pannamodel || Pannamodel.length === 0) && (!SangamModel || SangamModel.length === 0)) {
+//             return res.status(404).json({ message: "No Panna or Sangam models found." });
+//         }
+
+//         const resultData = {
+//             session,
+//             result: null,
+//             number,
+//             betdate,
+//             marketId,
+//             bit_number: generatedBitNumber,
+//             panaaModal: null,
+//             win_amount :0,
+//             sangamModal: null,
+//             userId: null, // This should be set during the matching process
+//             win_manage: "loser", // Default value is loser
+//             win_amount: 0 // Default win_amount if no win condition is met
+//         };
+
+//         let pannaWin = false;
+//         let sangamWin = false;
+//         for (const panna of Pannamodel) {
+//             if ((session === 'open' && panna.status === true) || (session === 'close' && panna.status === false)) {
+//                 if (panna.point === sumOfDigits) {
+//                     resultData.panaaModal = panna;
+//                     resultData.userId = panna._id; // Set userId from matched Panna
+//                     resultData.result = panna.marketId.result;
+//                     pannaWin = true;
+//                     break;
+//                 }
+//             }
+//         }
+
+//         for (const sangam of SangamModel) {
+//             if ((session === 'open' && sangam.status === true) || (session === 'close' && sangam.status === false)) {
+//                 if (sangam.bid_point === number) {
+//                     resultData.sangamModal = sangam;
+//                     resultData.userId = sangam._id; // Set userId from matched Sangam
+//                     resultData.result = sangam.marketId.result;
+//                     sangamWin = true;
+//                     break;
+//                 }
+//             }
+//         }
+
+//         // Set win status
+//         if (pannaWin || sangamWin) {
+//             resultData.win_manage = "winner";
+//         }
+
+//         // Check if userId is set before saving
+//         if (resultData.userId && (resultData.panaaModal || resultData.sangamModal)) {
+//             const data = new ResultModel(resultData);
+//             const savedResult = await data.save();
+
+//             return res.status(200).json({
+//                 status: 200,
+//                 message: "Result saved successfully.",
+//                 data: savedResult
+//             });
+//         }
+
+//         return res.status(400).json({ message: "No matching point found in Panna or Sangam models." });
+
+//     } catch (error) {
+//         console.error("Error saving result:", error);
+//         res.status(500).json({ message: "An error occurred while saving the result." });
+//     }
+// };
+
+
 exports.ResultAdd = async (req, res) => {
     try {
         const { session, number, betdate, marketId, bit_number } = req.body;
@@ -108,15 +189,16 @@ exports.ResultAdd = async (req, res) => {
             marketId,
             bit_number: generatedBitNumber,
             panaaModal: null,
-            win_amount :0,
+            win_amount: 0,
             sangamModal: null,
             userId: null, // This should be set during the matching process
-            win_manage: "loser", // Default value is loser
-            win_amount: 0 // Default win_amount if no win condition is met
+            win_manage: "loser", // Default value is "loser"
         };
 
         let pannaWin = false;
         let sangamWin = false;
+
+        // Check for a match in the Panna model
         for (const panna of Pannamodel) {
             if ((session === 'open' && panna.status === true) || (session === 'close' && panna.status === false)) {
                 if (panna.point === sumOfDigits) {
@@ -124,11 +206,12 @@ exports.ResultAdd = async (req, res) => {
                     resultData.userId = panna._id; // Set userId from matched Panna
                     resultData.result = panna.marketId.result;
                     pannaWin = true;
-                    break;
+                    break; // Break once a match is found
                 }
             }
         }
 
+        // Check for a match in the Sangam model
         for (const sangam of SangamModel) {
             if ((session === 'open' && sangam.status === true) || (session === 'close' && sangam.status === false)) {
                 if (sangam.bid_point === number) {
@@ -136,18 +219,18 @@ exports.ResultAdd = async (req, res) => {
                     resultData.userId = sangam._id; // Set userId from matched Sangam
                     resultData.result = sangam.marketId.result;
                     sangamWin = true;
-                    break;
+                    break; // Break once a match is found
                 }
             }
         }
 
-        // Set win status
+        // If a win is detected, update win_manage to "winner"
         if (pannaWin || sangamWin) {
             resultData.win_manage = "winner";
         }
 
         // Check if userId is set before saving
-        if (resultData.userId && (resultData.panaaModal || resultData.sangamModal)) {
+        if (resultData.userId) {
             const data = new ResultModel(resultData);
             const savedResult = await data.save();
 
@@ -158,7 +241,15 @@ exports.ResultAdd = async (req, res) => {
             });
         }
 
-        return res.status(400).json({ message: "No matching point found in Panna or Sangam models." });
+        // If no match is found, still save the result with "loser" status
+        const data = new ResultModel(resultData);
+        const savedResult = await data.save();
+
+        return res.status(200).json({
+            status: 200,
+            message: "Result saved ",
+            data: savedResult
+        });
 
     } catch (error) {
         console.error("Error saving result:", error);
