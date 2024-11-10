@@ -57,6 +57,7 @@ exports.MarketingAdd = catchAsync(async (req, res, next) => {
 
 
 const moment = require('moment');
+const moment = require('moment-timezone');
 
 exports.MarketList = catchAsync(async (req, res) => {
     try {
@@ -65,49 +66,67 @@ exports.MarketList = catchAsync(async (req, res) => {
 
         // If no records found, return a 404 response
         if (!records || records.length === 0) {
-            console.log("No markets found");
             return res.status(404).json({
                 status: false,
                 message: "No markets found.",
             });
         }
 
-        const currentDateTime = moment(); // Get the current date and time using Moment.js
-        console.log("Fetching market statuses at:", currentDateTime);
+        // Get current date and time (in Asia/Kolkata timezone for consistency)
+        const currentDateTime = moment().tz('Asia/Kolkata'); // Ensure you use the correct time zone
+        console.log("Current Time:", currentDateTime.format()); // Log current time for debugging
 
-        // Update the market status based on open_time and close_time
+        // Array to hold updated market records
         const updatedRecords = [];
+
+        // Loop through each record
         for (let record of records) {
-            console.log(`Processing market: ${record._id}`);
+            console.log(`Processing Market ID: ${record._id} | Name: ${record.name}`);
 
-            const openTimeToday = moment();
-            const closeTimeToday = moment();
+            // Initialize today's open and close times in the specified time zone
+            const openTimeToday = moment().tz('Asia/Kolkata');
+            const closeTimeToday = moment().tz('Asia/Kolkata');
 
+            // Split open_time and close_time into hours and minutes
             const [openHours, openMinutes] = record.open_time.split(':');
             const [closeHours, closeMinutes] = record.close_time.split(':');
 
+            // Set open and close times
             openTimeToday.set('hours', openHours).set('minutes', openMinutes).set('seconds', 0);
             closeTimeToday.set('hours', closeHours).set('minutes', closeMinutes).set('seconds', 0);
 
+            // Handle the case where the market crosses midnight (e.g., 10 PM to 6 AM)
             if (closeTimeToday.isBefore(openTimeToday)) {
-                closeTimeToday.add(1, 'days');
+                closeTimeToday.add(1, 'days'); // Add one day to close time
             }
 
+            console.log('Open Time:', openTimeToday.format());
+            console.log('Close Time:', closeTimeToday.format());
+
+            // Default status is inactive
             let status = "inactive";
+
+            // Check if the current time is between open_time and close_time
             if (currentDateTime.isBetween(openTimeToday, closeTimeToday, null, '[)')) {
-                status = "active";
+                status = "active"; // Market is active during this time
             }
 
+            console.log(`Market ID: ${record._id} | Status: ${status}`);
+
+            // Update the record with the new market status
             const updatedRecord = {
-                ...record._doc,
-                market_status: status
+                ...record._doc,  // Keep the original fields
+                market_status: status,  // Update the market status
             };
 
-            await marketing.findByIdAndUpdate(record._id, { market_status: status });
+            // Save the updated market status to the database
+            const updateResult = await marketing.findByIdAndUpdate(record._id, { market_status: status });
+            console.log('Database Update Result:', updateResult);
 
-            updatedRecords.push(updatedRecord);
+            updatedRecords.push(updatedRecord);  // Add to the updated records array
         }
 
+        // Respond with the updated records
         res.status(200).json({
             status: true,
             data: updatedRecords,
