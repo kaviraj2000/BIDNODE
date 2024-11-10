@@ -34,10 +34,7 @@ exports.ResultAdd = async (req, res) => {
         const Pannamodel = await Panna.find({}).populate('userId').populate('marketId');
         const SangamModel = await Sangam.find({}).populate('userId').populate('marketId');
 
-        if ((!Pannamodel || Pannamodel.length === 0) && (!SangamModel || SangamModel.length === 0)) {
-            return res.status(404).json({ message: "No Panna or Sangam models found." });
-        }
-
+       
         const resultData = {
             session,
             result: null,
