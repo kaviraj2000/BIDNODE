@@ -60,7 +60,7 @@ exports.MarketList = catchAsync(async (req, res) => {
     try {
         // Fetch records and sort by creation date in descending order (latest first)
         const records = await marketing.find({}).sort({ create_date: -1 });
-
+console.log("records",records)
         if (!records || records.length === 0) {
             return res.status(404).json({
                 status: false,
