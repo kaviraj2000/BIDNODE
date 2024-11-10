@@ -6,166 +6,6 @@ const Sangam = require("../Models/Sangam");
 const catchAsync = require("../utils/catchAsync");
 const Marketing = require("../Models/Marketing");
 
-// exports.ResultAdd = async (req, res) => {
-//     try {
-//         const { session, number, betdate, marketId } = req.body;
-
-//         const sumOfDigits = number.toString().split('').reduce((acc, digit) => acc + parseInt(digit), 0);
-//         console.log("sumOfDigits", sumOfDigits);
-
-//         const Pannamodel = await Panna.find({}).populate('userId').populate('marketId');
-//         if (!Pannamodel || Pannamodel.length === 0) {
-//             return res.status(404).json({ message: "No Panna models found." });
-//         }
-
-//         const SangamModel = await Sangam.find({}).populate('userId').populate('marketId');
-//         if (!SangamModel || SangamModel.length === 0) {
-//             return res.status(404).json({ message: "No Sangam models found." });
-//         }
-
-//         console.log("SangamModel", SangamModel);
-
-//         // Collect results
-//         const results = [];
-
-//         // Check Panna models
-//         for (const panna of Pannamodel) {
-//             if ((session === 'open' && panna.status === true) || (session === 'close' && panna.status === false)) {
-//                 if (panna.point === sumOfDigits) {
-//                     const data = new ResultModel({
-//                         session,
-//                         number,
-//                         betdate,
-//                         marketId,
-//                         panaaModal: panna,
-//                         userId: panna.userId // Save userId from Panna
-//                     });
-
-//                     console.log("Result data to be saved for Panna:", data);
-//                     const result = await data.save();
-//                     results.push(result); // Store the result
-//                 }
-//             }
-//         }
-
-//         // Check Sangam models
-//         for (const sangam of SangamModel) {
-//             if ((session === 'open' && sangam.status === true) || (session === 'close' && sangam.status === false)) {
-//                 if (sangam.bid_point === number) {
-//                     const data = new ResultModel({
-//                         session,
-//                         number,
-//                         betdate,
-//                         marketId,
-//                         sangamModal: sangam,
-//                         userId: sangam.userId // Save userId from Sangam
-//                     });
-
-//                     console.log("Result data to be saved for Sangam:", data);
-//                     const result = await data.save();
-//                     results.push(result); // Store the result
-//                 }
-//             }
-//         }
-
-//         // Check if any results were saved
-//         if (results.length > 0) {
-//             return res.status(200).json({
-//                 status: 200,
-//                 message: "Results saved successfully.",
-//                 data: results
-//             });
-//         }
-
-//         return res.status(400).json({ message: "No matching point found in Panna or Sangam models." });
-
-//     } catch (error) {
-//         console.error("Error saving result:", error);
-//         res.status(500).json({ message: "An error occurred while saving the result." });
-//     }
-// };
-
-// exports.ResultAdd = async (req, res) => {
-//     try {
-//         const { session, number, betdate, marketId, bit_number } = req.body;
-
-//         const generatedBitNumber = bit_number || Math.floor(100000 + Math.random() * 900000); // 6-digit random number
-//         const sumOfDigits = number.toString().split('').reduce((acc, digit) => acc + parseInt(digit), 0);
-
-//         const Pannamodel = await Panna.find({}).populate('userId').populate('marketId');
-//         const SangamModel = await Sangam.find({}).populate('userId').populate('marketId');
-
-//         if ((!Pannamodel || Pannamodel.length === 0) && (!SangamModel || SangamModel.length === 0)) {
-//             return res.status(404).json({ message: "No Panna or Sangam models found." });
-//         }
-
-//         const resultData = {
-//             session,
-//             result: null,
-//             number,
-//             betdate,
-//             marketId,
-//             bit_number: generatedBitNumber,
-//             panaaModal: null,
-//             win_amount :0,
-//             sangamModal: null,
-//             userId: null, // This should be set during the matching process
-//             win_manage: "loser", // Default value is loser
-//             win_amount: 0 // Default win_amount if no win condition is met
-//         };
-
-//         let pannaWin = false;
-//         let sangamWin = false;
-//         for (const panna of Pannamodel) {
-//             if ((session === 'open' && panna.status === true) || (session === 'close' && panna.status === false)) {
-//                 if (panna.point === sumOfDigits) {
-//                     resultData.panaaModal = panna;
-//                     resultData.userId = panna._id; // Set userId from matched Panna
-//                     resultData.result = panna.marketId.result;
-//                     pannaWin = true;
-//                     break;
-//                 }
-//             }
-//         }
-
-//         for (const sangam of SangamModel) {
-//             if ((session === 'open' && sangam.status === true) || (session === 'close' && sangam.status === false)) {
-//                 if (sangam.bid_point === number) {
-//                     resultData.sangamModal = sangam;
-//                     resultData.userId = sangam._id; // Set userId from matched Sangam
-//                     resultData.result = sangam.marketId.result;
-//                     sangamWin = true;
-//                     break;
-//                 }
-//             }
-//         }
-
-//         // Set win status
-//         if (pannaWin || sangamWin) {
-//             resultData.win_manage = "winner";
-//         }
-
-//         // Check if userId is set before saving
-//         if (resultData.userId && (resultData.panaaModal || resultData.sangamModal)) {
-//             const data = new ResultModel(resultData);
-//             const savedResult = await data.save();
-
-//             return res.status(200).json({
-//                 status: 200,
-//                 message: "Result saved successfully.",
-//                 data: savedResult
-//             });
-//         }
-
-//         return res.status(400).json({ message: "No matching point found in Panna or Sangam models." });
-
-//     } catch (error) {
-//         console.error("Error saving result:", error);
-//         res.status(500).json({ message: "An error occurred while saving the result." });
-//     }
-// };
-
-// Helper function to get the digital root (single digit sum of digits)
 function getDigitalRoot(number) {
     let sum = number
         .toString()
@@ -179,7 +19,7 @@ function getDigitalRoot(number) {
             .split('')
             .reduce((acc, digit) => acc + parseInt(digit), 0);
     }
-    
+
     return sum;
 }
 
@@ -293,129 +133,6 @@ exports.ResultAdd = async (req, res) => {
 };
 
 
-// exports.ResultAdd = async (req, res) => {
-//     try {
-//         const { session, number, betdate, marketId, bit_number } = req.body;
-
-//         const generatedBitNumber = bit_number || Math.floor(100000 + Math.random() * 900000); // 6-digit random number
-//         const sumOfDigits = number.toString().split('').reduce((acc, digit) => acc + parseInt(digit), 0);
-
-//         // Populate marketId in both Panna and Sangam models to access market result
-//         const Pannamodel = await Panna.find({}).populate('userId').populate('marketId');
-//         const SangamModel = await Sangam.find({}).populate('userId').populate('marketId');
-
-//         if ((!Pannamodel || Pannamodel.length === 0) && (!SangamModel || SangamModel.length === 0)) {
-//             return res.status(404).json({ message: "No Panna or Sangam models found." });
-//         }
-
-//         const resultData = {
-//             session,
-//             result: null,
-//             number,
-//             betdate,
-//             marketId,
-//             bit_number: generatedBitNumber,
-//             panaaModal: null,
-//             win_amount: 0,
-//             sangamModal: null,
-//             userId: null, // This should be set during the matching process
-//             win_manage: "loser", // Default value is "loser"
-//         };
-
-//         let pannaWin = false;
-//         let sangamWin = false;
-
-//         // Check for a match in the Panna model
-//         for (const panna of Pannamodel) {
-//             if ((session === 'open' && panna.status === true) || (session === 'close' && panna.status === false)) {
-//                 if (panna.point === sumOfDigits) {
-//                     resultData.panaaModal = panna;
-//                     resultData.userId = panna._id; // Set userId from matched Panna
-//                     resultData.result = panna.marketId.result; // Use result from marketId in Panna
-//                     pannaWin = true;
-//                     break; // Break once a match is found
-//                 }
-//             }
-//         }
-
-//         // Check for a match in the Sangam model
-//         for (const sangam of SangamModel) {
-//             if ((session === 'open' && sangam.status === true) || (session === 'close' && sangam.status === false)) {
-//                 if (sangam.bid_point === number) {
-//                     resultData.sangamModal = sangam;
-//                     resultData.userId = sangam._id; // Set userId from matched Sangam
-//                     resultData.result = sangam.marketId.result; // Use result from marketId in Sangam
-//                     sangamWin = true;
-//                     break; // Break once a match is found
-//                 }
-//             }
-//         }
-
-//         // If a win is detected, update win_manage to "winner"
-//         if (pannaWin || sangamWin) {
-//             resultData.win_manage = "winner";
-//         }
-
-//         // If no match is found, use the result from marketId if available, or fallback to formatted number
-//         // Assuming `number` is a variable containing the number whose digits we want to sum
-
-//         const numberSum = number
-//             .toString()          // Convert number to string
-//             .split('')           // Split into an array of characters (digits)
-//             .reduce((acc, digit) => acc + parseInt(digit), 0);  // Sum the digits
-//         console.log("numberSum", numberSum)
-//         if (!pannaWin && !sangamWin) {
-//             const market = await Market.findById(marketId); // Fetch the market to get and update the result directly
-//             resultData.result = market.result || (session === 'open' ? `${number}-${numberSum}x-xxx` : `xxx-x${numberSum}-${number}`);
-//             console.log("resultData.resultaa", resultData.result)
-//             if (!market.result) {
-//                 market.result = resultData.result;
-//                 await market.save();
-//             } else {
-//                 resultData.result = session === 'open' ? `${number}-${numberSum}x-xxx` : `xxx-x${numberSum}-${number}`;
-//                 console.log("resultData.resultaaqqqq", resultData.result)
-
-//             }
-//         }
-//         // Check if userId is set before saving
-//         if (resultData.userId) {
-//             const data = new ResultModel(resultData);
-//             console.log('data11', data)
-//             const savedResult = await data.save();
-
-//             return res.status(200).json({
-//                 status: 200,
-//                 message: "Result saved successfully.",
-//                 data: savedResult
-//             });
-//         }
-
-//         // If no match is found in Panna or Sangam, save the result with "loser" status using the market result or formatted result
-//         const data = new ResultModel(resultData);
-//         console.log("qq", data)
-//         const savedResult = await data.save();
-
-//         return res.status(200).json({
-//             status: 200,
-//             message: "Result saved",
-//             data: savedResult
-//         });
-
-//     } catch (error) {
-//         console.error("Error saving result:", error);
-//         res.status(500).json({ message: "An error occurred while saving the result." });
-//     }
-// };
-
-
-
-
-
-
-
-
-
-
 exports.ResultList = catchAsync(async (req, res) => {
     try {
         const records = await ResultModel.find({})
@@ -453,19 +170,31 @@ exports.ResultAddMarket = async (req, res) => {
             return res.status(400).json({ message: "Market ID is required." });
         }
 
-        const market = await Market.findById(marketId);
+
+        // Find the result documents matching the given marketId from ResultModel
+        const marketResult = await ResultModel.find({ marketId });
+
+        if (!marketResult || marketResult.length === 0) {
+            return res.status(404).json({ message: "Market results not found." });
+        }
+
+        // Assuming 'marketId' exists in another collection (e.g., MarketModel)
+        const market = await Market.findById(marketId); // Find the Market model by ID
 
         if (!market) {
             return res.status(404).json({ message: "Market not found." });
         }
 
+        // Fetch Sangam data for the given marketId
         const sangamData = await Sangam.find({ marketId });
 
         const combinedData = {
             marketName: market.name,
-            sangam: sangamData
+            sangam: sangamData,
+            marketResults: marketResult
         };
 
+        // Return the combined data
         return res.status(200).json({
             status: 200,
             message: "Result fetched successfully.",
@@ -477,6 +206,7 @@ exports.ResultAddMarket = async (req, res) => {
         res.status(500).json({ message: "An error occurred while fetching the result." });
     }
 };
+
 
 
 // marketname, close panna, close digit, open pana , open ditig
