@@ -5,6 +5,7 @@ const Panna = require("../Models/Panna");
 const Sangam = require("../Models/Sangam");
 const catchAsync = require("../utils/catchAsync");
 const Marketing = require("../Models/Marketing");
+const resultmodel = require("../Models/Result");
 
 function getDigitalRoot(number) {
     let sum = number
@@ -34,7 +35,7 @@ function getDigitalRoot(number) {
 //         const Pannamodel = await Panna.find({}).populate('userId').populate('marketId');
 //         const SangamModel = await Sangam.find({}).populate('userId').populate('marketId');
 
-       
+
 //         const resultData = {
 //             session,
 //             result: null,
@@ -129,12 +130,44 @@ function getDigitalRoot(number) {
 //     }
 // };
 
+
+
 exports.ResultAdd = async (req, res) => {
     try {
         const { session, number, betdate, marketId, bit_number } = req.body;
 
-        const generatedBitNumber = bit_number || Math.floor(100000 + Math.random() * 900000); // 6-digit random number
-        const sumOfDigits = getDigitalRoot(number); // Use the digital root function
+        // Check if session is "open" and generate a new bit_number if it's not provided
+        let generatedBitNumber;
+        let resultDoc = await ResultModel.findOne().populate('marketId'); // Populate market details
+
+        if (resultDoc) {
+            // Create a new key with combined bit_numbers
+            let combinedBitNumber = {
+                resultModelBitNumber: resultDoc.bit_number,  // bit_number from ResultModel
+                marketBitNumber: resultDoc.marketId.bit_number // bit_number from the populated marketId
+            };
+
+            console.log("Combined Bit Number:", combinedBitNumber);
+
+            // Using the session type to determine the logic
+            if (session === "close") {
+                // If session is "close", use the existing bit_number from market
+                generatedBitNumber = combinedBitNumber.resultModelBitNumber;
+                console.log("Using existing bit_number from market:", generatedBitNumber);
+            } else {
+                // If session is "open", generate a new 6-digit random number
+                generatedBitNumber = Math.floor(100000 + Math.random() * 900000); // Generate a new 6-digit random number
+                console.log("Generated new bit_number:", generatedBitNumber);
+            }
+        } else {
+            // If no resultDoc found, generate a new bit_number
+            generatedBitNumber = Math.floor(100000 + Math.random() * 900000); // Generate a new 6-digit random number
+            console.log("Generated new bit_number:", generatedBitNumber);
+            console.log("No market found for the provided marketId");
+        }
+
+        const sumOfDigits = getDigitalRoot(number);
+        console.log("Digital Root:", sumOfDigits);
 
         // Populate marketId in both Panna and Sangam models to access market result
         const Pannamodel = await Panna.find({}).populate('userId').populate('marketId');
@@ -153,6 +186,7 @@ exports.ResultAdd = async (req, res) => {
             userId: null, // This should be set during the matching process
             win_manage: "loser", // Default value is "loser"
         };
+        console.log("resultData", resultData)
 
         let pannaWin = false;
         let sangamWin = false;
@@ -190,26 +224,36 @@ exports.ResultAdd = async (req, res) => {
 
         // If no match is found, use the result from marketId if available, or fallback to formatted number
         const numberSum = getDigitalRoot(number); // Apply digital root function here
-        console.log("numberSum", numberSum);
 
-        if (!pannaWin && !sangamWin) {
-            const market = await Market.findById(marketId); // Fetch the market to get and update the result directly
-         console.log("market", market)
-            if (market) {
-                    market.result = session === 'open' ? `${number}-${numberSum}x-xxx` : `xxx-x${numberSum}-${number}`;
-                    await market.save();  // Save the updated market with the new result
-                resultData.result = market.result; // Set resultData.result to the market's result
-                console.log("Updated Market Result:", resultData.result);
-            } else {
-                // Handle case if market is not found
-                resultData.result = session === 'open' ? `${number}-${numberSum}x-xxx` : `xxx-x${numberSum}-${number}`;
+        let market = await Market.findById(marketId); // Fetch the market to get and update the result directly
+
+        if (market) {
+            // Check if the session is 'open' or 'close' and handle the result accordingly
+            if (session === 'open') {
+                // If the market is in 'open' session, set the result
+                market.result = `${number}-${numberSum}-xxx`;
+            } else if (session === 'close') {
+                // If market already has a result, update it by appending the new data
+                if (market.result) {
+                    const resultParts = market.result.split('-');
+                    if (resultParts.length === 3) {
+                        // Update the second part (which might be 'x') and add the number for 'close' session
+                        market.result = `${resultParts[0]}-${resultParts[1]}${numberSum}-${number}`;
+                    }
+                }
             }
+
+            // Save the updated market result
+            await market.save();  // Save the updated market with the new result
+            resultData.result = market.result; // Set resultData.result to the market's result
+        } else {
+            // Handle case if market is not found
+            resultData.result = session === 'open' ? `${number}-${numberSum}-xxx` : `xxx-${numberSum}-${number}`;
         }
 
         // Save result data to the ResultModel
         if (resultData.userId) {
             const data = new ResultModel(resultData);
-            console.log('Saving Result Data:', data);
             const savedResult = await data.save();
 
             return res.status(200).json({
@@ -221,7 +265,6 @@ exports.ResultAdd = async (req, res) => {
 
         // If no match is found in Panna or Sangam, save the result with "loser" status using the market result or formatted result
         const data = new ResultModel(resultData);
-        console.log("Saving loser result:", data);
         const savedResult = await data.save();
 
         return res.status(200).json({
@@ -240,11 +283,11 @@ exports.ResultAdd = async (req, res) => {
 
 exports.ResultList = catchAsync(async (req, res) => {
     try {
+        // Fetch the records, sorted by createdAt in descending order, and filter by marketId and session
         const records = await ResultModel.find({})
             .populate('marketId')
             .populate('userId')
-
-            ;
+            .sort({ betdate: -1 });  // Sorting by createdAt in descending order
 
         if (!records || records.length === 0) {
             return res.status(404).json({
@@ -253,9 +296,31 @@ exports.ResultList = catchAsync(async (req, res) => {
             });
         }
 
+        // Create a map or logic to filter out duplicates by bit_number
+        const latestRecords = [];
+        const seenBitNumbers = new Set(); // This will track unique bit_numbers
+
+        for (const record of records) {
+            // For "close" session, ensure that the latest record with the same bit_number is retained
+            if (record.session === "close") {
+                // If bit_number already exists (from open session or previous close session), don't add again
+                if (!seenBitNumbers.has(record.bit_number)) {
+                    seenBitNumbers.add(record.bit_number);
+                    latestRecords.push(record);
+                }
+            } else if (record.session === "open") {
+                // For "open" session, always add the record with a new bit_number
+                if (!seenBitNumbers.has(record.bit_number)) {
+                    seenBitNumbers.add(record.bit_number);
+                    latestRecords.push(record);
+                }
+            }
+        }
+
+        // Send the latest records
         res.status(200).json({
             status: true,
-            data: records,
+            data: latestRecords,
             message: "Results fetched successfully.",
         });
     } catch (error) {
