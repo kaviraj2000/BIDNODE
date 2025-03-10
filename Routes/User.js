@@ -30,18 +30,11 @@ router.post("/profile", validateToken, ProfileAdd)
 router.get("/setting", Setting)
 
 router.get("/subadmin", SubAdmin)
-
-
 router.post("/Sublogin", Sublogin)
 
 router.get("/profile-get", Profile)
 
-
-
 router.get(`/userlist/:id`, UserListId);
-
-
-
 
 
 module.exports = router;

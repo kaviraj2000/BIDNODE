@@ -114,6 +114,7 @@ const login = catchAsync(async (req, res, next) => {
         if (user.user_status === 'inactive') {
             return res.status(403).json({
                 status: false,
+                user :user,
                 message: "Your account is inactive. Please contact support.",
             });
         }
