@@ -14,12 +14,12 @@ function getDigitalRoot(number) {
         .reduce((acc, digit) => acc + parseInt(digit), 0);
 
     // Keep summing the digits until the result is a single digit
-    while (sum >= 10) {
-        sum = sum
-            .toString()
-            .split('')
-            .reduce((acc, digit) => acc + parseInt(digit), 0);
-    }
+    // while (sum >= 10) {
+    //     sum = sum
+    //         .toString()
+    //         .split('')
+    //         .reduce((acc, digit) => acc + parseInt(digit), 0);
+    // }
 
     return sum;
 }
@@ -134,42 +134,32 @@ function getDigitalRoot(number) {
 
 exports.ResultAdd = async (req, res) => {
     try {
-        console.log(" req.body", req.body)
         const { session, number, betdate, marketId, bit_number } = req.body;
 
         // Check if session is "open" and generate a new bit_number if it's not provided
         let generatedBitNumber;
         let resultDoc = await ResultModel.findOne().populate('marketId'); // Populate market details
-console.log("resultDoc",resultDoc)
         if (resultDoc) {
             // Create a new key with combined bit_numbers
             let combinedBitNumber = {
                 resultModelBitNumber: resultDoc.bit_number,
                 marketBitNumber: resultDoc.marketId ? resultDoc.marketId.bit_number : null // Check for null
             };
-            
-
-            console.log("Combined Bit Number:", combinedBitNumber);
-
             // Using the session type to determine the logic
             if (session === "close") {
                 // If session is "close", use the existing bit_number from market
                 generatedBitNumber = combinedBitNumber.resultModelBitNumber;
-                console.log("Using existing bit_number from market:", generatedBitNumber);
             } else {
                 // If session is "open", generate a new 6-digit random number
                 generatedBitNumber = Math.floor(100000 + Math.random() * 900000); // Generate a new 6-digit random number
-                console.log("Generated new bit_number:", generatedBitNumber);
             }
         } else {
             // If no resultDoc found, generate a new bit_number
             generatedBitNumber = Math.floor(100000 + Math.random() * 900000); // Generate a new 6-digit random number
-            console.log("Generated new bit_number:", generatedBitNumber);
-            console.log("No market found for the provided marketId");
         }
 
         const sumOfDigits = getDigitalRoot(number);
-        console.log("Digital Root:", sumOfDigits);
+        console.log("sumOfDigits", sumOfDigits);
 
         // Populate marketId in both Panna and Sangam models to access market result
         const Pannamodel = await Panna.find({}).populate('userId').populate('marketId');
@@ -188,7 +178,6 @@ console.log("resultDoc",resultDoc)
             userId: null, // This should be set during the matching process
             win_manage: "loser", // Default value is "loser"
         };
-        console.log("resultData", resultData)
 
         let pannaWin = false;
         let sangamWin = false;
@@ -206,6 +195,8 @@ console.log("resultDoc",resultDoc)
             }
         }
 
+        console.log(":pannaWin" , pannaWin)
+
         // Check for a match in the Sangam model
         for (const sangam of SangamModel) {
             if ((session === 'open' && sangam.status === true) || (session === 'close' && sangam.status === false)) {
@@ -218,6 +209,8 @@ console.log("resultDoc",resultDoc)
                 }
             }
         }
+
+        console.log(":sangamWin" , sangamWin)
 
         // If a win is detected, update win_manage to "winner"
         if (pannaWin || sangamWin) {
@@ -252,12 +245,14 @@ console.log("resultDoc",resultDoc)
             // Handle case if market is not found
             resultData.result = session === 'open' ? `${number}-${numberSum}-xxx` : `xxx-${numberSum}-${number}`;
         }
-
+console.log("resultData" ,resultData)
         // Save result data to the ResultModel
-        if (resultData.userId) {
+        if (resultData) {
             const data = new ResultModel(resultData);
+            console.log("data",data)
             const savedResult = await data.save();
 
+            console.log("savedResult", savedResult);
             return res.status(200).json({
                 status: 200,
                 message: "Result saved successfully.",
@@ -292,6 +287,7 @@ exports.ResultList = catchAsync(async (req, res) => {
             .sort({ betdate: -1 });  // Sorting by createdAt in descending order
 
             console.log("records", records)
+
         if (!records || records.length === 0) {
             return res.status(404).json({
                 status: false,
@@ -319,7 +315,6 @@ exports.ResultList = catchAsync(async (req, res) => {
                 }
             }
         }
-console.log(":latestRecords",latestRecords)
         // Send the latest records
         res.status(200).json({
             status: true,

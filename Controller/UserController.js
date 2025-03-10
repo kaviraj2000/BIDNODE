@@ -250,7 +250,6 @@ const UserListId = catchAsync(async (req, res) => {
         const record = await User.findById(id);
         const payment = await Payment.find({ user_id: id , payment_status :1});
         const userpayment = await Payment.find({ user_id: id , payment_status :0});
-console.log("userpayment",userpayment)
         if (!record) {
             return res.status(404).json({
                 status: false,
