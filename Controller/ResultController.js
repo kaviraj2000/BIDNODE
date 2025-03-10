@@ -291,6 +291,7 @@ exports.ResultList = catchAsync(async (req, res) => {
             .populate('userId')
             .sort({ betdate: -1 });  // Sorting by createdAt in descending order
 
+            console.log("records", records)
         if (!records || records.length === 0) {
             return res.status(404).json({
                 status: false,
@@ -318,7 +319,7 @@ exports.ResultList = catchAsync(async (req, res) => {
                 }
             }
         }
-
+console.log(":latestRecords",latestRecords)
         // Send the latest records
         res.status(200).json({
             status: true,

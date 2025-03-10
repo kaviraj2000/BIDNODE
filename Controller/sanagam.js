@@ -19,6 +19,22 @@ exports.SangamAdd = catchAsync(async (req, res, next) => {
                 status: false,
             });
         }
+
+          const user = await User.findById(userId);
+                if (!user) {
+                    return res.status(404).json({
+                        status: false,
+                        message: "User not found.",
+                    });
+                }
+        
+                // Check if user state is inactive
+                if (user.user_status !== 'active') {
+                    return res.status(403).json({
+                        status: false,
+                        message: "Your account is inactive. Please contact support to activate your account.",
+                    });
+                }
         const parsedDate = moment(date, "DD-MM-YYYY", true);
         if (!parsedDate.isValid()) {
             return res.status(400).json({
@@ -27,7 +43,6 @@ exports.SangamAdd = catchAsync(async (req, res, next) => {
             });
         }
 
-        const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({
                 status: false,

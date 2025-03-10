@@ -16,6 +16,22 @@ exports.pannaAdd = catchAsync(async (req, res, next) => {
             });
         }
 
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({
+                status: false,
+                message: "User not found.",
+            });
+        }
+
+        // Check if user state is inactive
+        if (user.user_status !== 'active') {
+            return res.status(403).json({
+                status: false,
+                message: "Your account is inactive. Please contact support to activate your account.",
+            });
+        }
+
         // Validate digit based on type
         if (type === "single_digit") {
             if (!/^\d{1}$/.test(digit)) {
@@ -54,7 +70,6 @@ exports.pannaAdd = catchAsync(async (req, res, next) => {
             });
         }
 
-        const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({
                 status: false,
