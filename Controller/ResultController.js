@@ -271,7 +271,7 @@ console.log("resultDoc",resultDoc)
 
         return res.status(200).json({
             status: 200,
-            message: "Result saved",
+            message: "Market result successfully declared.",
             data: savedResult
         });
 
