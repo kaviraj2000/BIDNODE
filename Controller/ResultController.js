@@ -134,18 +134,20 @@ function getDigitalRoot(number) {
 
 exports.ResultAdd = async (req, res) => {
     try {
+        console.log(" req.body", req.body)
         const { session, number, betdate, marketId, bit_number } = req.body;
 
         // Check if session is "open" and generate a new bit_number if it's not provided
         let generatedBitNumber;
         let resultDoc = await ResultModel.findOne().populate('marketId'); // Populate market details
-
+console.log("resultDoc",resultDoc)
         if (resultDoc) {
             // Create a new key with combined bit_numbers
             let combinedBitNumber = {
-                resultModelBitNumber: resultDoc.bit_number,  // bit_number from ResultModel
-                marketBitNumber: resultDoc.marketId.bit_number // bit_number from the populated marketId
+                resultModelBitNumber: resultDoc.bit_number,
+                marketBitNumber: resultDoc.marketId ? resultDoc.marketId.bit_number : null // Check for null
             };
+            
 
             console.log("Combined Bit Number:", combinedBitNumber);
 
