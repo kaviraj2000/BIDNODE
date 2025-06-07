@@ -284,8 +284,14 @@ exports.MarketUpdate = catchAsync(async (req, res, next) => {
         // Create Date objects for open_time and close_time based on the current date
         const openTimeToday = new Date();
         const closeTimeToday = new Date();
-
+        if (!open_time || !close_time || !open_time.includes(':') || !close_time.includes(':')) {
+            return res.status(400).json({
+                status: false,
+                message: "Valid open_time and close_time are required in HH:mm format.",
+            });
+        }
         // Set the open and close times by updating the hours and minutes
+
         const [openHours, openMinutes] = open_time.split(':');
         const [closeHours, closeMinutes] = close_time.split(':');
 

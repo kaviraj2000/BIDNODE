@@ -311,8 +311,7 @@ const WidthrawalRate = catchAsync(async (req, res) => {
 const WidthrawalPayment = catchAsync(async (req, res) => {
     try {
         const records = await withdrawal.find({ payment_status: 0 })
-            .populate('userId'); 
-            console.log("records",records)
+            .populate('userId');
         if (!records || records.length === 0) {
             return res.status(404).json({
                 status: false,

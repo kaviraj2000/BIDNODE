@@ -1,6 +1,8 @@
 const dotenv = require("dotenv");
 require("./utils/mongoconfig");
 dotenv.config();
+require('./Cronjob');
+
 const user = require("./Models/SignUp")
 const Marketing = require("./Models/Marketing")
 const widthrwalModel = require("./Models/Widthwral")
