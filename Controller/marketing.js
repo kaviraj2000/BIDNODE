@@ -89,7 +89,7 @@ exports.MarketList = catchAsync(async (req, res) => {
             const [closeHours, closeMinutes] = record.close_time.split(':');
 
             // Set open and close times
-            openTimeToday.set('hours', openHours).set('minutes', openMinutes).set('seconds', 0);
+            openTimeToday.set('hours', 0).set('minutes', 0).set('seconds', 0);
             closeTimeToday.set('hours', closeHours).set('minutes', closeMinutes).set('seconds', 0);
 
             // Handle the case where the market crosses midnight (e.g., 10 PM to 6 AM)
