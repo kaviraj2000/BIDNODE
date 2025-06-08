@@ -39,31 +39,23 @@ exports.ResultAdd = async (req, res) => {
 
         const sumOfDigits = getDigitalRoot(number);
 
-        const resultData = {
-            session,
-            result: null,
-            number,
-            betdate,
-            marketId,
-            bit_number: generatedBitNumber,
-            panaaModal: null,
-            win_amount: 0,
-            sangamModal: null,
-            userId: null,
-            win_manage: "loser",
-        };
+    
+
+        console.log("Panna", Panna);
 
         const pannaBets = await Panna.find({
             marketId: marketId,
-            date: new Date(betdate),
             status: true
         }).populate('userId').populate('marketId');
+        console.log("pannaBets" ,pannaBets)
 
         const sangamBets = await Sangam.find({
             marketId: marketId,
-            date: new Date(betdate),
             status: true
         }).populate('userId').populate('marketId');
+        console.log("sangamBets", sangamBets);
+
+        console.log("Sangam", Sangam);
 
         // Check Panna wins
         for (const panna of pannaBets) {
@@ -95,6 +87,19 @@ exports.ResultAdd = async (req, res) => {
             }
         }
 
+            const resultData = {
+            session,
+            result: null,
+            number,
+            betdate,
+            marketId,
+            bit_number: generatedBitNumber,
+            panaaModal: null,
+            win_amount: 0,
+            sangamModal: null,
+            userId: null,
+            win_manage: "loser",
+        };
         // Check Sangam wins if no panna win found
         if (!resultData.userId) {
             for (const sangam of sangamBets) {
