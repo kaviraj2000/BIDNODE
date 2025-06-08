@@ -12,7 +12,7 @@ function getDigitalRoot(number) {
         .split('')
         .reduce((acc, digit) => acc + parseInt(digit), 0);
 
-
+console.log("sum", sum);
 
     return sum;
 }
@@ -37,6 +37,20 @@ exports.ResultAdd = async (req, res) => {
             generatedBitNumber = Math.floor(100000 + Math.random() * 900000);
         }
 
+           const resultData = {
+            session,
+            result: null,
+            number,
+            betdate,
+            marketId,
+            bit_number: generatedBitNumber,
+            panaaModal: null,
+            win_amount: 0,
+            sangamModal: null,
+            userId: null,
+            win_manage: "loser",
+        };
+
         const sumOfDigits = getDigitalRoot(number);
 
         const pannaBets = await Panna.find({
@@ -51,25 +65,25 @@ exports.ResultAdd = async (req, res) => {
 
         // Check Panna wins
         for (const panna of pannaBets) {
-            if (panna.type === 'single_digit' && panna.digit != sumOfDigits) {
+            if (panna.type === 'single_digit' && panna.digit === sumOfDigits) {
                 resultData.panaaModal = panna;
                 resultData.userId = panna.userId._id;
                 resultData.win_manage = "winner";
                 break;
             }
-            else if (panna.type === 'doble_digit' && panna.digit != sumOfDigits) {
+            else if (panna.type === 'doble_digit' && panna.digit === sumOfDigits) {
                 resultData.panaaModal = panna;
                 resultData.userId = panna.userId._id;
                 resultData.win_manage = "winner";
                 break;
             }
-            if (panna.type === 'single_panna' && panna.digit != sumOfDigits) {
+            if (panna.type === 'single_panna' && panna.digit === sumOfDigits) {
                 resultData.panaaModal = panna;
                 resultData.userId = panna.userId._id;
                 resultData.win_manage = "winner";
                 break;
             }
-            if (panna.type === 'double_panna' && panna.digit != sumOfDigits) {
+            if (panna.type === 'double_panna' && panna.digit === sumOfDigits) {
                 resultData.panaaModal = panna;
                 resultData.userId = panna.userId._id;
                 resultData.win_manage = "winner";
@@ -77,19 +91,7 @@ exports.ResultAdd = async (req, res) => {
             }
         }
 
-        const resultData = {
-            session,
-            result: null,
-            number,
-            betdate,
-            marketId,
-            bit_number: generatedBitNumber,
-            panaaModal: null,
-            win_amount: 0,
-            sangamModal: null,
-            userId: null,
-            win_manage: "loser",
-        };
+     
         // Check Sangam wins if no panna win found
         if (!resultData.userId) {
             for (const sangam of sangamBets) {
@@ -281,7 +283,6 @@ exports.ResultUser = async (req, res) => {
                 marketType: pointsStype || null,
             };
         });
-
         // Check if results are found
         if (combinedResults.length === 0) {
             return res.status(200).json({

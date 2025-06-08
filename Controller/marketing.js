@@ -294,7 +294,7 @@ exports.MarketUpdate = catchAsync(async (req, res, next) => {
         const [openHours, openMinutes] = open_time.split(':');
         const [closeHours, closeMinutes] = close_time.split(':');
 
-        openTimeToday.setHours(openHours, openMinutes, 0); // Set hours and minutes for open_time
+        openTimeToday.setHours(0, 0, 0); // Set hours and minutes for open_time
         closeTimeToday.setHours(closeHours, closeMinutes, 0); // Set hours and minutes for close_time
 
         // Determine the market status based on the current time

@@ -272,9 +272,6 @@ const UserListId = catchAsync(async (req, res) => {
     }
 });
 
-
-
-
 const userlistStatus = catchAsync(async (req, res) => {
     try {
         const users = await User.find({ user_status: 'inactive' });
@@ -298,7 +295,6 @@ const userlistStatus = catchAsync(async (req, res) => {
         });
     }
 });
-
 
 const updateUserStatus = catchAsync(async (req, res) => {
     try {
@@ -334,7 +330,6 @@ const updateUserStatus = catchAsync(async (req, res) => {
         });
     }
 });
-
 
 // Controller to reset MPIN
 const resetMpin = async (req, res) => {
@@ -397,9 +392,6 @@ const UserListIdDelete = catchAsync(async (req, res, next) => {
         });
     }
 });
-
-
-
 
 const ProfileAdd = catchAsync(async (req, res, next) => {
     try {
@@ -472,10 +464,6 @@ const ProfileAdd = catchAsync(async (req, res, next) => {
     }
 });
 
-
-
-
-
 const Setting = catchAsync(async (req, res) => {
     try {
         const profile = await User.find({role :"admin"});
@@ -507,7 +495,6 @@ const SubAdmin = catchAsync(async (req, res) => {
         });
     }
 });
-
 
 module.exports = {
     signup,

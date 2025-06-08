@@ -4,7 +4,7 @@ const moment = require('moment');
 const catchAsync = require("../utils/catchAsync");
 const User = require("../Models/SignUp");
 
-exports.pannaAdd = catchAsync(async (req, res, next) => {
+exports.pannaAdd = catchAsync(async (req, res) => {
     try {
         const userId = req?.user?._id;
         const { type, status, date, digit, point, marketId, sangam_type } = req.body;
@@ -137,7 +137,6 @@ exports.pannalist = catchAsync(async (req, res) => {
     }
 });
 
-
 exports.bidhistory = catchAsync(async (req, res) => {
     try {
         const records = await Panna.find({})
@@ -170,4 +169,3 @@ exports.bidhistory = catchAsync(async (req, res) => {
         });
     }
 });
-
