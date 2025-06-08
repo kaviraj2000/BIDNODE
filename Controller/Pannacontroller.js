@@ -114,19 +114,12 @@ exports.pannaAdd = catchAsync(async (req, res, next) => {
     }
 });
 
-
-
-
 exports.pannalist = catchAsync(async (req, res) => {
     try {
         const records = await Panna.find({}).populate("marketId").sort({ date: -1 });
+        console.log("Fetched Panna records:", records);
         const sangam = await Sangam.find({}).populate("marketId").sort({ date: -1 });
-        // if (!records || records.length === 0) {
-        //     return res.status(404).json({
-        //         status: false,
-        //         message: "No records found.",
-        //     });
-        // }
+        console.log("Fetched Panna records:", sangam);
 
         res.status(200).json({
             status: true,
@@ -137,7 +130,6 @@ exports.pannalist = catchAsync(async (req, res) => {
     } catch (error) {
         console.error("Error fetching Panna records:", error);
 
-        // Send error response
         res.status(500).json({
             status: false,
             message: "Internal Server Error. Please try again later.",
