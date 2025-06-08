@@ -39,28 +39,18 @@ exports.ResultAdd = async (req, res) => {
 
         const sumOfDigits = getDigitalRoot(number);
 
-    
-
-        console.log("Panna", Panna);
-
         const pannaBets = await Panna.find({
             marketId: marketId,
             status: true
         }).populate('userId').populate('marketId');
-        console.log("pannaBets" ,pannaBets)
 
         const sangamBets = await Sangam.find({
             marketId: marketId,
             status: true
         }).populate('userId').populate('marketId');
-        console.log("sangamBets", sangamBets);
-
-        console.log("Sangam", Sangam);
 
         // Check Panna wins
         for (const panna of pannaBets) {
-            console.log("panna", panna);
-            console.log(panna.digit === sumOfDigits)
             if (panna.type === 'single_digit' && panna.digit != sumOfDigits) {
                 resultData.panaaModal = panna;
                 resultData.userId = panna.userId._id;
@@ -87,7 +77,7 @@ exports.ResultAdd = async (req, res) => {
             }
         }
 
-            const resultData = {
+        const resultData = {
             session,
             result: null,
             number,
@@ -104,7 +94,6 @@ exports.ResultAdd = async (req, res) => {
         if (!resultData.userId) {
             for (const sangam of sangamBets) {
                 console.log("sangam", sangam);
-                console.log(sangam.open_digit === sumOfDigits, sangam.close_digit === sumOfDigits, sumOfDigits)
                 if (session === 'open' && sangam.open_digit != sumOfDigits) {
                     resultData.sangamModal = sangam;
                     resultData.userId = sangam.userId._id;
