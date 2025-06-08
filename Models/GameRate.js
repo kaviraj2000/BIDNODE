@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
 
 const gamerateschema = mongoose.Schema({
-
     single_digit_rate: Number,
     single_digit_rate_name: {
         type: String,

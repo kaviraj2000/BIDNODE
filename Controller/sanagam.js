@@ -20,21 +20,21 @@ exports.SangamAdd = catchAsync(async (req, res, next) => {
             });
         }
 
-          const user = await User.findById(userId);
-                if (!user) {
-                    return res.status(404).json({
-                        status: false,
-                        message: "User not found.",
-                    });
-                }
-        
-                // Check if user state is inactive
-                if (user.user_status !== 'active') {
-                    return res.status(403).json({
-                        status: false,
-                        message: "Your account is inactive. Please contact support to activate your account.",
-                    });
-                }
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({
+                status: false,
+                message: "User not found.",
+            });
+        }
+
+        // Check if user state is inactive
+        if (user.user_status !== 'active') {
+            return res.status(403).json({
+                status: false,
+                message: "Your account is inactive. Please contact support to activate your account.",
+            });
+        }
         const parsedDate = moment(date, "DD-MM-YYYY", true);
         if (!parsedDate.isValid()) {
             return res.status(400).json({
@@ -104,20 +104,22 @@ exports.SangamAdd = catchAsync(async (req, res, next) => {
 
 
 exports.GameRateAdd = catchAsync(async (req, res, next) => {
-    try {
-        const { single_digit_rate,
-            doble_digit_rate,
-            Single_panna_rate,
-            Doble_panna_rate,
-            Triple_panna_rate,
-            full_sangam,
-            Half_sangam,
-            Digit_on,
-            dp_motors } = req.body;
+    const {
+        _id,
+        single_digit_rate,
+        doble_digit_rate,
+        Single_panna_rate,
+        Doble_panna_rate,
+        Triple_panna_rate,
+        full_sangam,
+        Half_sangam,
+        Digit_on,
+        dp_motors
+    } = req.body;
 
-
-        // Create and save the new record
-        const record = new GameRate({
+    const record = await GameRate.findByIdAndUpdate(
+        _id,
+        {
             single_digit_rate,
             doble_digit_rate,
             Single_panna_rate,
@@ -127,25 +129,22 @@ exports.GameRateAdd = catchAsync(async (req, res, next) => {
             Half_sangam,
             Digit_on,
             dp_motors
-        });
+        },
+        { new: true, runValidators: true }
+    );
 
-        await record.save();
-
-        // Send success response
-        res.status(201).json({
-            data: record,
-            status: true,
-            message: "GameRate record added successfully.",
-        });
-
-    } catch (error) {
-        console.error("Error adding GameRate record:", error);
-
-        // Send error response
-        res.status(500).json({
+    if (!record) {
+        return res.status(404).json({
             status: false,
-            message: "Internal Server Error. Please try again later.",
+            message: "GameRate record not found.",
         });
     }
+
+    res.status(200).json({
+        data: record,
+        status: true,
+        message: "GameRate record updated successfully.",
+    });
 });
+
 
