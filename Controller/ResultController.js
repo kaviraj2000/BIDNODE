@@ -69,13 +69,30 @@ exports.ResultAdd = async (req, res) => {
         for (const panna of pannaBets) {
             console.log("panna", panna);
             console.log(panna.digit === sumOfDigits)
-            if (panna.type === 'single_digit' && panna.digit === sumOfDigits) {
+            if (panna.type === 'single_digit' && panna.digit != sumOfDigits) {
                 resultData.panaaModal = panna;
-                resultData.userId = panna.userId._id; 
+                resultData.userId = panna.userId._id;
                 resultData.win_manage = "winner";
                 break;
             }
-            // Add other panna types (double_digit, single_panna, etc.) with their respective conditions
+            else if (panna.type === 'doble_digit' && panna.digit != sumOfDigits) {
+                resultData.panaaModal = panna;
+                resultData.userId = panna.userId._id;
+                resultData.win_manage = "winner";
+                break;
+            }
+            if (panna.type === 'single_panna' && panna.digit != sumOfDigits) {
+                resultData.panaaModal = panna;
+                resultData.userId = panna.userId._id;
+                resultData.win_manage = "winner";
+                break;
+            }
+            if (panna.type === 'double_panna' && panna.digit != sumOfDigits) {
+                resultData.panaaModal = panna;
+                resultData.userId = panna.userId._id;
+                resultData.win_manage = "winner";
+                break;
+            }
         }
 
         // Check Sangam wins if no panna win found
@@ -83,12 +100,12 @@ exports.ResultAdd = async (req, res) => {
             for (const sangam of sangamBets) {
                 console.log("sangam", sangam);
                 console.log(sangam.open_digit === sumOfDigits, sangam.close_digit === sumOfDigits, sumOfDigits)
-                if (session === 'open' && sangam.open_digit === sumOfDigits) {
+                if (session === 'open' && sangam.open_digit != sumOfDigits) {
                     resultData.sangamModal = sangam;
                     resultData.userId = sangam.userId._id;
                     resultData.win_manage = "winner";
                     break;
-                } else if (session === 'close' && sangam.close_digit === sumOfDigits) {
+                } else if (session === 'close' && sangam.close_digit != sumOfDigits) {
                     resultData.sangamModal = sangam;
                     resultData.userId = sangam.userId._id;
                     resultData.win_manage = "winner";
