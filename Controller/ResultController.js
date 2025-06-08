@@ -69,24 +69,30 @@ exports.ResultAdd = async (req, res) => {
                 resultData.panaaModal = panna;
                 resultData.userId = panna.userId._id;
                 resultData.win_manage = "winner";
+                resultData.win_amount = panna.point;
                 break;
             }
             else if (panna.type === 'doble_digit' && panna.digit === sumOfDigits) {
                 resultData.panaaModal = panna;
                 resultData.userId = panna.userId._id;
                 resultData.win_manage = "winner";
+                resultData.win_amount = panna.point;
                 break;
             }
             if (panna.type === 'single_panna' && panna.digit === sumOfDigits) {
                 resultData.panaaModal = panna;
                 resultData.userId = panna.userId._id;
                 resultData.win_manage = "winner";
+                resultData.win_amount = panna.point;
+
                 break;
             }
             if (panna.type === 'double_panna' && panna.digit === sumOfDigits) {
                 resultData.panaaModal = panna;
                 resultData.userId = panna.userId._id;
                 resultData.win_manage = "winner";
+                resultData.win_amount = panna.point;
+
                 break;
             }
         }
@@ -100,11 +106,13 @@ exports.ResultAdd = async (req, res) => {
                     resultData.sangamModal = sangam;
                     resultData.userId = sangam.userId._id;
                     resultData.win_manage = "winner";
+                    resultData.win_amount = sangam.bid_point;
                     break;
                 } else if (session === 'close' && sangam.close_digit != sumOfDigits) {
                     resultData.sangamModal = sangam;
                     resultData.userId = sangam.userId._id;
                     resultData.win_manage = "winner";
+                    resultData.win_amount = sangam.bid_point;
                     break;
                 }
             }
