@@ -85,7 +85,6 @@ exports.MarketList = catchAsync(async (req, res) => {
             const closeTimeToday = moment().tz('Asia/Kolkata');
 
             // Split open_time and close_time into hours and minutes
-            const [openHours, openMinutes] = record.open_time.split(':');
             const [closeHours, closeMinutes] = record.close_time.split(':');
 
             // Set open and close times
