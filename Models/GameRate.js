@@ -32,12 +32,9 @@ const gamerateschema = mongoose.Schema({
         default: "Half_sangam_rate" // replace with the default value you want
     },
     Digit_ons: {
-        type:String ,
+        type: String,
         default: "Digit_on" // replace with the default value you want
     },
-
-
-
     doble_digit_rate: Number,
     Single_panna_rate: Number,
     Doble_panna_rate: Number,
@@ -51,8 +48,6 @@ const gamerateschema = mongoose.Schema({
         default: Date.now,
     },
 })
-
-
 
 module.exports = mongoose.model("Rate", gamerateschema)
 
