@@ -54,21 +54,24 @@ exports.ResultAdd = async (req, res) => {
 
         const sumOfDigits = getDigitalRoot(number);
 
-        const pannaBets = await Panna.find({
+        const pannaBetsRaw = await Panna.find({
             marketId: marketId,
             status: true
         }).populate('userId').populate('marketId');
 
-        const sangamBets = await Sangam.find({
+        const sangamBetsRaw = await Sangam.find({
             marketId: marketId,
             status: true
         }).populate('userId').populate('marketId');
+
+        // ✅ Filter only those where user.role === "user"
+        const pannaBets = pannaBetsRaw.filter(bet => bet.userId && bet.userId.role === "user");
+        const sangamBets = sangamBetsRaw.filter(bet => bet.userId && bet.userId.role === "user");
+
 
 
         const ratesTable = await Rates.findOne(); // Assuming table name is "rates"
         console.log("ratesTable", ratesTable);
-        // Check Panna wins
-        // Check Panna wins
         for (const panna of pannaBets) {
             if (["single_digit", "doble_digit", "single_panna", "double_panna"].includes(panna.type) &&
                 panna.digit === sumOfDigits) {
@@ -113,6 +116,7 @@ exports.ResultAdd = async (req, res) => {
             }
         }
 
+
         // Update market result
         let market = await Market.findById(marketId);
         if (market) {
@@ -133,6 +137,14 @@ exports.ResultAdd = async (req, res) => {
         }
 
         const savedResult = await ResultModel.create(resultData);
+
+        if (resultData.userId && resultData.win_amount > 0) {
+            const user = await UserModal.findById(resultData.userId);
+            if (user) {
+                user.amount = (user.amount || 0) + resultData.win_amount;
+                await user.save();
+            }
+        }
 
         console.log("savedResult", savedResult);
         return res.status(200).json({
@@ -171,9 +183,7 @@ exports.ResultList = catchAsync(async (req, res) => {
         const seenBitNumbers = new Set(); // This will track unique bit_numbers
 
         for (const record of records) {
-            // For "close" session, ensure that the latest record with the same bit_number is retained
             if (record.session === "close") {
-                // If bit_number already exists (from open session or previous close session), don't add again
                 if (!seenBitNumbers.has(record.bit_number)) {
                     seenBitNumbers.add(record.bit_number);
                     latestRecords.push(record);

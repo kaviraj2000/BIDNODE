@@ -3,6 +3,7 @@ const Sangam = require("../Models/Sangam");
 const moment = require('moment');
 const catchAsync = require("../utils/catchAsync");
 const User = require("../Models/SignUp");
+const resultmodel = require("../Models/Result");
 
 exports.pannaAdd = catchAsync(async (req, res) => {
     try {
@@ -116,6 +117,8 @@ exports.pannaAdd = catchAsync(async (req, res) => {
 
 exports.pannalist = catchAsync(async (req, res) => {
     try {
+        const userId = req.user._id; // 👈 comes from validateToken middleware
+
         const records = await Panna.find({})
             .populate("marketId")
             .sort({ date: -1 });
@@ -124,10 +127,25 @@ exports.pannalist = catchAsync(async (req, res) => {
             .populate("marketId")
             .sort({ date: -1 });
 
+        const results = await resultmodel.find({ userId })
+            .populate('marketId') // populate Market data
+            .populate({
+                path: 'panaaModal',
+                model: 'Panna',
+                populate: { path: 'marketId userId' } // optional deeper population
+            })
+            .populate({
+                path: 'sangamModal',
+                model: 'Sangam',
+                populate: { path: 'marketId userId' }
+            });
+
+
         res.status(200).json({
             status: true,
             data: records,
             sangam: sangam,
+            results: results,
             message: "Records fetched successfully.",
         });
     } catch (error) {
