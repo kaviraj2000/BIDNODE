@@ -116,13 +116,13 @@ exports.pannaAdd = catchAsync(async (req, res) => {
 
 exports.pannalist = catchAsync(async (req, res) => {
     try {
-     const records = await Panna.find({})
-    .populate("marketId")
-    .sort({ date: -1 });
+        const records = await Panna.find({})
+            .populate("marketId")
+            .sort({ date: -1 });
 
-const sangam = await Sangam.find({})
-    .populate("marketId")
-    .sort({ date: -1 });
+        const sangam = await Sangam.find({})
+            .populate("marketId")
+            .sort({ date: -1 });
 
         res.status(200).json({
             status: true,

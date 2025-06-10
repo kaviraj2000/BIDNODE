@@ -1,6 +1,7 @@
 const ResultModel = require("../Models/Result");
 const Market = require("../Models/Marketing");
 const UserModal = require("../Models/SignUp");
+const Rates = require("../Models/GameRate");
 const Panna = require("../Models/Panna");
 const Sangam = require("../Models/Sangam");
 const catchAsync = require("../utils/catchAsync");
@@ -12,7 +13,7 @@ function getDigitalRoot(number) {
         .split('')
         .reduce((acc, digit) => acc + parseInt(digit), 0);
 
-console.log("sum", sum);
+    console.log("sum", sum);
 
     return sum;
 }
@@ -37,7 +38,7 @@ exports.ResultAdd = async (req, res) => {
             generatedBitNumber = Math.floor(100000 + Math.random() * 900000);
         }
 
-           const resultData = {
+        const resultData = {
             session,
             result: null,
             number,
@@ -63,41 +64,35 @@ exports.ResultAdd = async (req, res) => {
             status: true
         }).populate('userId').populate('marketId');
 
+
+        const ratesTable = await Rates.findOne(); // Assuming table name is "rates"
+        console.log("ratesTable", ratesTable);
+        // Check Panna wins
         // Check Panna wins
         for (const panna of pannaBets) {
-            if (panna.type === 'single_digit' && panna.digit === sumOfDigits) {
+            if (["single_digit", "doble_digit", "single_panna", "double_panna"].includes(panna.type) &&
+                panna.digit === sumOfDigits) {
                 resultData.panaaModal = panna;
                 resultData.userId = panna.userId._id;
                 resultData.win_manage = "winner";
-                resultData.win_amount = panna.point;
-                break;
-            }
-            else if (panna.type === 'doble_digit' && panna.digit === sumOfDigits) {
-                resultData.panaaModal = panna;
-                resultData.userId = panna.userId._id;
-                resultData.win_manage = "winner";
-                resultData.win_amount = panna.point;
-                break;
-            }
-            if (panna.type === 'single_panna' && panna.digit === sumOfDigits) {
-                resultData.panaaModal = panna;
-                resultData.userId = panna.userId._id;
-                resultData.win_manage = "winner";
-                resultData.win_amount = panna.point;
-
-                break;
-            }
-            if (panna.type === 'double_panna' && panna.digit === sumOfDigits) {
-                resultData.panaaModal = panna;
-                resultData.userId = panna.userId._id;
-                resultData.win_manage = "winner";
-                resultData.win_amount = panna.point;
-
+                resultData.win_amount = panna.point * (ratesTable[`${panna.type}_rate`] || 1);
                 break;
             }
         }
+        // Check Sangam wins if no panna win found
+        if (!resultData.userId) {
+            for (const sangam of sangamBets) {
+                if ((session === 'open' && sangam.open_digit !== sumOfDigits) ||
+                    (session === 'close' && sangam.close_digit !== sumOfDigits)) {
+                    resultData.sangamModal = sangam;
+                    resultData.userId = sangam.userId._id;
+                    resultData.win_manage = "winner";
+                    resultData.win_amount = sangam.bid_point * (ratesTable.full_sangam || 1);
+                    break;
+                }
+            }
+        }
 
-     
         // Check Sangam wins if no panna win found
         if (!resultData.userId) {
             for (const sangam of sangamBets) {
@@ -209,12 +204,9 @@ exports.ResultList = catchAsync(async (req, res) => {
 exports.ResultAddMarket = async (req, res) => {
     try {
         const { marketId } = req.body;
-
         if (!marketId) {
             return res.status(400).json({ message: "Market ID is required." });
         }
-
-
         // Find the result documents matching the given marketId from ResultModel
         const marketResult = await ResultModel.find({ marketId });
 
@@ -274,9 +266,7 @@ exports.ResultUser = async (req, res) => {
             marketMap[market._id] = { name: market.name, type: market.type };
         });
 
-        // Combine Pannamodels with their corresponding market and extract points from panaaModal
         const combinedResults = Pannamodel.map(panna => {
-            // Join points into a single string, separated by commas
             const pointsString = panna.panaaModal.map(modal => modal.point).join(', ');
             const pointsStype = panna.panaaModal.map(modal => modal.type).join(', ');
 
