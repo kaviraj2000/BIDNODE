@@ -1,4 +1,4 @@
-const { ResultAdd, ResultList, ResultAddMarket, ResultUser } = require("../Controller/ResultController");
+const { ResultAdd, ResultList, ResultAddMarket, ResultUser, ResultUserHistory } = require("../Controller/ResultController");
 
 const resultroute = require("express").Router();
 
@@ -9,6 +9,9 @@ resultroute.get("/resultget" , ResultList)
 resultroute.post("/market" , ResultAddMarket)
 
 resultroute.post("/winner" , ResultUser)
+
+resultroute.get("/gamedata" , ResultUserHistory)
+
 
 
 module.exports = resultroute;

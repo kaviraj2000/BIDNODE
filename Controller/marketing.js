@@ -134,11 +134,6 @@ exports.MarketList = catchAsync(async (req, res) => {
     }
 });
 
-
-
-
-
-
 exports.MarketListStatus = catchAsync(async (req, res) => {
     try {
         // Fetch records and sort by creation date in descending order (latest first)
@@ -349,7 +344,6 @@ exports.MarketUpdateData = catchAsync(async (req, res, next) => {
     try {
         const { Id, market_status } = req.body;
 
-        // Check if Id or market_status is missing
         if (!Id || !market_status) {
             return res.status(400).json({
                 status: false,
@@ -357,7 +351,6 @@ exports.MarketUpdateData = catchAsync(async (req, res, next) => {
             });
         }
 
-        // Find the market by ID
         const marketRecord = await marketing.findById(Id);
 
         if (!marketRecord) {
@@ -371,7 +364,7 @@ exports.MarketUpdateData = catchAsync(async (req, res, next) => {
         const updatedRecord = await marketing.findByIdAndUpdate(
             Id,
             {
-                market_status: market_status, // Directly update the market status
+                status: market_status, // Directly update the market status
             },
             { new: true, runValidators: true }
         );

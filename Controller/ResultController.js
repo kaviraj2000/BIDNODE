@@ -6,6 +6,7 @@ const Panna = require("../Models/Panna");
 const Sangam = require("../Models/Sangam");
 const catchAsync = require("../utils/catchAsync");
 const Marketing = require("../Models/Marketing");
+const GameRate = require("../Models/GameRate");
 
 function getDigitalRoot(number) {
     let sum = number
@@ -50,6 +51,7 @@ exports.ResultAdd = async (req, res) => {
             sangamModal: null,
             userId: null,
             win_manage: "loser",
+            win_rate:0,
         };
 
         const sumOfDigits = getDigitalRoot(number);
@@ -78,6 +80,7 @@ exports.ResultAdd = async (req, res) => {
                 resultData.panaaModal = panna;
                 resultData.userId = panna.userId._id;
                 resultData.win_manage = "winner";
+                resultData.win_rate = panna.point ;
                 resultData.win_amount = panna.point * (ratesTable[`${panna.type}_rate`] || 1);
                 break;
             }
@@ -90,6 +93,7 @@ exports.ResultAdd = async (req, res) => {
                     resultData.sangamModal = sangam;
                     resultData.userId = sangam.userId._id;
                     resultData.win_manage = "winner";
+                    resultData.win_rate = sangam.bid_point ;
                     resultData.win_amount = sangam.bid_point * (ratesTable.full_sangam || 1);
                     break;
                 }
@@ -311,3 +315,11 @@ exports.ResultUser = async (req, res) => {
         res.status(500).json({ message: "An error occurred while fetching the result." });
     }
 };
+
+exports.ResultUserHistory = catchAsync(async (req, res) => {
+    const rate = await GameRate.findOne();
+    res.status(200).json({
+        success: true,
+        data: rate
+    });
+});

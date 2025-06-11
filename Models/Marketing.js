@@ -6,6 +6,11 @@ const marketingSchema = new mongoose.Schema({
     enum: ["active", "inactive"],
     default: "active",
   },
+  status: {
+    type: String,
+    enum: ["active", "inactive"],
+    default: "active",
+  },
   market_type: {
     type: String,
     default: "dehli"

@@ -41,6 +41,10 @@ const resultmongoose = mongoose.Schema({
         type: Number,
         default: 0
     },
+     win_rate: {
+        type: Number,
+        default: 0
+    },
     win_manage: {
         type: String
     },
