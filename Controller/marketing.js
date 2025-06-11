@@ -93,6 +93,8 @@ exports.MarketList = catchAsync(async (req, res) => {
             if (closeTimeToday.isBefore(openTimeToday)) {
                 closeTimeToday.add(1, 'days'); // Add one day to close time
             }
+
+
             // Default status is inactive
             let status = "inactive";
 
@@ -356,7 +358,6 @@ exports.MarketUpdateData = catchAsync(async (req, res, next) => {
         const updatedRecord = await marketing.findByIdAndUpdate(
             Id,
             {
-                status: market_status,
                 market_status: market_status, // Directly update the market status
             },
             { new: true, runValidators: true }

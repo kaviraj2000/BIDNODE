@@ -19,6 +19,10 @@ function getDigitalRoot(number) {
     return sum;
 }
 
+function getDigitSum(num) {
+    return num.toString().split('').reduce((sum, digit) => sum + parseInt(digit), 0);
+}
+
 exports.ResultAdd = async (req, res) => {
     try {
         const { session, number, betdate, marketId } = req.body;
@@ -121,24 +125,53 @@ exports.ResultAdd = async (req, res) => {
         }
 
 
-        // Update market result
+        // // Update market result
         let market = await Market.findById(marketId);
+        // if (market) {
+        //     if (session === 'open') {
+        //         market.result = `${number}-${sumOfDigits}x-xxx`;
+        //     } else if (session === 'close') {
+        //         if (market.result) {
+        //             const resultParts = market.result.split('-');
+        //             if (resultParts.length === 3) {
+        //                 market.result = `${resultParts[0]}-${resultParts[1]}-${number}`;
+
+        //             }
+        //         }
+        //     }
+        //     await market.save();
+        //     resultData.result = market.result;
+        // } else {
+        //     resultData.result = session === 'open' ? `${number}-${sumOfDigits}x-xxx` : `xxx-x${sumOfDigits}-${number}`;
+        // }
+
         if (market) {
-            if (session === 'open') {
-                market.result = `${number}-${sumOfDigits}-xxx`;
-            } else if (session === 'close') {
-                if (market.result) {
-                    const resultParts = market.result.split('-');
-                    if (resultParts.length === 3) {
-                        market.result = `${resultParts[0]}-${resultParts[1]}-${number}`;
-                    }
-                }
+    if (session === 'open') {
+        const openSum = getDigitSum(number);
+        market.result = `${number}-${openSum}x-xxx`;
+    } else if (session === 'close') {
+        if (market.result) {
+            const resultParts = market.result.split('-');
+            if (resultParts.length === 3) {
+                const openNumber = resultParts[0];
+                const openSum = getDigitSum(openNumber);
+                const closeSum = getDigitSum(number);
+                market.result = `${openNumber}-${openSum}${closeSum}-${number}`;
             }
-            await market.save();
-            resultData.result = market.result;
         } else {
-            resultData.result = session === 'open' ? `${number}-${sumOfDigits}-xxx` : `xxx-xx-${number}`;
+            const closeSum = getDigitSum(number);
+            market.result = `xxx-x${closeSum}-${number}`;
         }
+    }
+
+    await market.save();
+    resultData.result = market.result;
+} else {
+    const sum = getDigitSum(number);
+    resultData.result = session === 'open'
+        ? `${number}-${sum}x-xxx`
+        : `xxx-x${sum}-${number}`;
+}
 
         const savedResult = await ResultModel.create(resultData);
 
