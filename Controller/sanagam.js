@@ -120,15 +120,15 @@ exports.GameRateAdd = catchAsync(async (req, res, next) => {
     const record = await GameRate.findByIdAndUpdate(
         _id,
         {
-            single_digit_rate,
-            doble_digit_rate,
-            Single_panna_rate,
-            Doble_panna_rate,
-            Triple_panna_rate,
-            full_sangam,
-            Half_sangam,
-            Digit_on,
-            dp_motors
+            single_digit_rate: single_digit_rate,
+            double_digit_rate: doble_digit_rate,
+            single_panna_rate: Single_panna_rate,
+            double_panna_rate: Doble_panna_rate,
+            triple_panna_rate: Triple_panna_rate,
+            full_sangam_rate: full_sangam,
+            half_sangam_rate: Half_sangam,
+            digit_on_rate: Digit_on,
+            dp_motor_rate: dp_motors
         },
         { new: true, runValidators: true }
     );

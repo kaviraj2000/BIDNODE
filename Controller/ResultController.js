@@ -8,6 +8,11 @@ const catchAsync = require("../utils/catchAsync");
 const Marketing = require("../Models/Marketing");
 const GameRate = require("../Models/GameRate");
 
+
+function getSumOfDigits(num) {
+    return String(num).split("").reduce((sum, digit) => sum + parseInt(digit), 0);
+}
+
 function getDigitalRoot(number) {
     let sum = number
         .toString()
@@ -27,17 +32,32 @@ function getRecursiveDigitSum(num) {
 
     return num;
 }
+function getDigitalRoot(num) {
+    const digits = String(num).split("").map(Number);
+    const sum = digits.reduce((a, b) => a + b, 0);
+    return sum % 10;
+}
+
+function getRecursiveDigitSum(num) {
+    let sum = String(num)
+        .split("")
+        .reduce((acc, val) => acc + parseInt(val), 0);
+    return sum >= 10 ? getRecursiveDigitSum(sum) : sum;
+}
+
 
 exports.ResultAdd = async (req, res) => {
     try {
         const { session, number, betdate, marketId } = req.body;
         console.log("req.body", req.body);
+
         let generatedBitNumber;
-        let resultDoc = await ResultModel.findOne().populate('marketId');
+        let resultDoc = await ResultModel.findOne().populate("marketId");
+
         if (resultDoc) {
             let combinedBitNumber = {
                 resultModelBitNumber: resultDoc.bit_number,
-                marketBitNumber: resultDoc.marketId ? resultDoc.marketId.bit_number : null
+                marketBitNumber: resultDoc.marketId ? resultDoc.marketId.bit_number : null,
             };
             if (session === "close") {
                 generatedBitNumber = combinedBitNumber.resultModelBitNumber;
@@ -63,100 +83,71 @@ exports.ResultAdd = async (req, res) => {
             win_rate: 0,
         };
 
-        const sumOfDigits = getDigitalRoot(number);
+        const sumOfDigits = getSumOfDigits(number);
+        console.log("sumOfDigits", sumOfDigits);
 
         const pannaBetsRaw = await Panna.find({
             marketId: marketId,
-            status: true
-        }).populate('userId').populate('marketId');
+            status: true,
+        }).populate("userId").populate("marketId");
 
         const sangamBetsRaw = await Sangam.find({
             marketId: marketId,
-            status: true
-        }).populate('userId').populate('marketId');
+            status: true,
+        }).populate("userId").populate("marketId");
 
-        // ✅ Filter only those where user.role === "user"
         const pannaBets = pannaBetsRaw.filter(bet => bet.userId && bet.userId.role === "user");
         const sangamBets = sangamBetsRaw.filter(bet => bet.userId && bet.userId.role === "user");
 
-
-
-        const ratesTable = await Rates.findOne(); // Assuming table name is "rates"
+        const ratesTable = await Rates.findOne(); // Assuming there's only one rates doc
         console.log("ratesTable", ratesTable);
+
         for (const panna of pannaBets) {
-            if (["single_digit", "doble_digit", "single_panna", "double_panna"].includes(panna.type) &&
-                panna.digit === sumOfDigits) {
+            console.log("Checking panna:", panna._id.toString(), panna.type, panna.digit);
+            const pannaDigitStr = panna.digit.toString();
+            const pannaDigitSum = pannaDigitStr.split('').reduce((sum, d) => sum + parseInt(d), 0);
+            if (
+                ["single_digit", "double_digit", "single_panna", "double_panna"].includes(panna.type) &&
+                pannaDigitSum === sumOfDigits
+            ) {
+
                 resultData.panaaModal = panna;
                 resultData.userId = panna.userId._id;
                 resultData.win_manage = "winner";
                 resultData.win_rate = panna.point;
                 resultData.win_amount = panna.point * (ratesTable[`${panna.type}_rate`] || 1);
+                console.log(`Matched panna: ${panna.type}, win_amount: ${resultData.win_amount}`);
                 break;
             }
         }
-        // Check Sangam wins if no panna win found
+
+        // If no panna match found, try sangam
         if (!resultData.userId) {
             for (const sangam of sangamBets) {
-                if ((session === 'open' && sangam.open_digit !== sumOfDigits) ||
-                    (session === 'close' && sangam.close_digit !== sumOfDigits)) {
+                if (
+                    (session === "open" && sangam.open_digit === sumOfDigits) ||
+                    (session === "close" && sangam.close_digit === sumOfDigits)
+                ) {
                     resultData.sangamModal = sangam;
                     resultData.userId = sangam.userId._id;
                     resultData.win_manage = "winner";
                     resultData.win_rate = sangam.bid_point;
                     resultData.win_amount = sangam.bid_point * (ratesTable.full_sangam || 1);
+                    console.log("Matched sangam:", sangam._id.toString());
                     break;
                 }
             }
         }
 
-        // Check Sangam wins if no panna win found
-        if (!resultData.userId) {
-            for (const sangam of sangamBets) {
-                console.log("sangam", sangam);
-                if (session === 'open' && sangam.open_digit != sumOfDigits) {
-                    resultData.sangamModal = sangam;
-                    resultData.userId = sangam.userId._id;
-                    resultData.win_manage = "winner";
-                    resultData.win_amount = sangam.bid_point;
-                    break;
-                } else if (session === 'close' && sangam.close_digit != sumOfDigits) {
-                    resultData.sangamModal = sangam;
-                    resultData.userId = sangam.userId._id;
-                    resultData.win_manage = "winner";
-                    resultData.win_amount = sangam.bid_point;
-                    break;
-                }
-            }
-        }
-
-
-        // // Update market result
+        // Update market result
         let market = await Market.findById(marketId);
-        // if (market) {
-        //     if (session === 'open') {
-        //         market.result = `${number}-${sumOfDigits}x-xxx`;
-        //     } else if (session === 'close') {
-        //         if (market.result) {
-        //             const resultParts = market.result.split('-');
-        //             if (resultParts.length === 3) {
-        //                 market.result = `${resultParts[0]}-${resultParts[1]}-${number}`;
-
-        //             }
-        //         }
-        //     }
-        //     await market.save();
-        //     resultData.result = market.result;
-        // } else {
-        //     resultData.result = session === 'open' ? `${number}-${sumOfDigits}x-xxx` : `xxx-x${sumOfDigits}-${number}`;
-        // }
-
         if (market) {
-            if (session === 'open') {
+            if (session === "open") {
                 const openSum = getRecursiveDigitSum(number);
                 market.result = `${number}-${openSum}x-xxx`;
-            } else if (session === 'close') {
+            } else if (session === "close") {
                 if (market.result) {
-                    const resultParts = market.result.split('-');
+                    const resultParts = market.result.split("-");
                     if (resultParts.length === 3) {
                         const openNumber = resultParts[0];
                         const openSum = getRecursiveDigitSum(openNumber);
@@ -173,33 +164,40 @@ exports.ResultAdd = async (req, res) => {
             resultData.result = market.result;
         } else {
             const sum = getRecursiveDigitSum(number);
-            resultData.result = session === 'open'
-                ? `${number}-${sum}x-xxx`
-                : `xxx-x${sum}-${number}`;
+            resultData.result =
+                session === "open"
+                    ? `${number}-${sum}x-xxx`
+                    : `xxx-x${sum}-${number}`;
         }
 
+        console.log("resultData", resultData);
         const savedResult = await ResultModel.create(resultData);
 
-        if (resultData.userId && resultData.win_amount > 0) {
+        if (resultData.userId) {
             const user = await UserModal.findById(resultData.userId);
+            console.log("user", user);
             if (user) {
                 user.amount = (user.amount || 0) + resultData.win_amount;
                 await user.save();
+                console.log("User updated with win amount:", user);
             }
+        } else {
+            console.log("No winner found.");
         }
 
-        console.log("savedResult", savedResult);
         return res.status(200).json({
             status: 200,
             message: "Result saved successfully.",
-            data: savedResult
+            data: savedResult,
         });
-
     } catch (error) {
         console.error("Error saving result:", error);
-        res.status(500).json({ message: "An error occurred while saving the result." });
+        res.status(500).json({
+            message: "An error occurred while saving the result.",
+        });
     }
 };
+
 
 
 
