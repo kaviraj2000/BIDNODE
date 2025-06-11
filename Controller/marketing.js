@@ -1,5 +1,6 @@
 const marketing = require("../Models/Marketing");
 const catchAsync = require("../utils/catchAsync");
+const moment = require('moment-timezone');
 
 exports.MarketingAdd = catchAsync(async (req, res, next) => {
     try {
@@ -55,9 +56,6 @@ exports.MarketingAdd = catchAsync(async (req, res, next) => {
     }
 });
 
-
-const moment = require('moment-timezone');
-
 exports.MarketList = catchAsync(async (req, res) => {
     try {
         // Fetch records from the database
@@ -95,8 +93,6 @@ exports.MarketList = catchAsync(async (req, res) => {
             if (closeTimeToday.isBefore(openTimeToday)) {
                 closeTimeToday.add(1, 'days'); // Add one day to close time
             }
-
-
             // Default status is inactive
             let status = "inactive";
 
@@ -187,8 +183,6 @@ exports.MarketListStatus = catchAsync(async (req, res) => {
     }
 });
 
-
-
 exports.MarketListId = catchAsync(async (req, res) => {
     try {
         const { id } = req.params;
@@ -259,7 +253,6 @@ exports.MarketDelete = catchAsync(async (req, res, next) => {
         });
     }
 });
-
 
 exports.MarketUpdate = catchAsync(async (req, res, next) => {
     try {
@@ -339,7 +332,6 @@ exports.MarketUpdate = catchAsync(async (req, res, next) => {
     }
 });
 
-
 exports.MarketUpdateData = catchAsync(async (req, res, next) => {
     try {
         const { Id, market_status } = req.body;
@@ -364,7 +356,8 @@ exports.MarketUpdateData = catchAsync(async (req, res, next) => {
         const updatedRecord = await marketing.findByIdAndUpdate(
             Id,
             {
-                status: market_status, // Directly update the market status
+                status: market_status,
+                market_status: market_status, // Directly update the market status
             },
             { new: true, runValidators: true }
         );

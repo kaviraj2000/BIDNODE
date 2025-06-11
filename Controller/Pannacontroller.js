@@ -8,7 +8,7 @@ const resultmodel = require("../Models/Result");
 exports.pannaAdd = catchAsync(async (req, res) => {
     try {
         const userId = req?.user?._id;
-        const { type, status, date, digit, point, marketId, sangam_type } = req.body;
+        const { type, status, date, digit, point, marketId, sangam_type , } = req.body;
         // User ID validation
         if (!userId) {
             return res.status(400).json({
