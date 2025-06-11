@@ -7,6 +7,7 @@ const Sangam = require("../Models/Sangam");
 const catchAsync = require("../utils/catchAsync");
 const Marketing = require("../Models/Marketing");
 const GameRate = require("../Models/GameRate");
+const moment = require("moment");
 
 
 function getSumOfDigits(num) {
@@ -251,38 +252,75 @@ exports.ResultList = catchAsync(async (req, res) => {
     }
 });
 
+// exports.ResultAddMarket = async (req, res) => {
+//     try {
+//         const { marketId } = req.body;
+//         if (!marketId) {
+//             return res.status(400).json({ message: "Market ID is required." });
+//         }
+//         const marketResult = await ResultModel.find({ marketId });
+
+//         if (!marketResult || marketResult.length === 0) {
+//             return res.status(404).json({ message: "Market results not found." });
+//         }
+//         const market = await Market.findById(marketId); // Find the Market model by ID
+//         if (!market) {
+//             return res.status(404).json({ message: "Market not found." });
+//         }
+//         const sangamData = await Sangam.find({ marketId });
+//         const combinedData = {
+//             marketName: market.name,
+//             marketResults: marketResult
+//         };
+//         return res.status(200).json({
+//             status: 200,
+//             message: "Result fetched successfully.",
+//             data: combinedData
+//         });
+//     } catch (error) {
+//         console.error("Error fetching result:", error);
+//         res.status(500).json({ message: "An error occurred while fetching the result." });
+//     }
+// };
+
+
 exports.ResultAddMarket = async (req, res) => {
     try {
         const { marketId } = req.body;
+
         if (!marketId) {
             return res.status(400).json({ message: "Market ID is required." });
         }
-        // Find the result documents matching the given marketId from ResultModel
-        const marketResult = await ResultModel.find({ marketId });
+
+        // Get today's date in YYYY-MM-DD format
+        const todayDate = moment().tz('Asia/Kolkata').format('YYYY-MM-DD');
+
+        // Find result by marketId and today's date
+        const marketResult = await ResultModel.find({
+            marketId,
+            betdate: todayDate
+        });
 
         if (!marketResult || marketResult.length === 0) {
-            return res.status(404).json({ message: "Market results not found." });
+            return res.status(404).json({ message: "Today's market results not found." });
         }
 
-        // Assuming 'marketId' exists in another collection (e.g., MarketModel)
-        const market = await Market.findById(marketId); // Find the Market model by ID
-
+        const market = await Market.findById(marketId);
         if (!market) {
             return res.status(404).json({ message: "Market not found." });
         }
 
-        // Fetch Sangam data for the given marketId
         const sangamData = await Sangam.find({ marketId });
 
         const combinedData = {
             marketName: market.name,
-            marketResults: marketResult
+            marketResults: marketResult,
+            sangamData
         };
 
-        // Return the combined data
         return res.status(200).json({
             status: 200,
-            message: "Result fetched successfully.",
+            message: "Today's result fetched successfully.",
             data: combinedData
         });
 
@@ -293,8 +331,6 @@ exports.ResultAddMarket = async (req, res) => {
 };
 
 
-
-// marketname, close panna, close digit, open pana , open ditig
 
 exports.ResultUser = async (req, res) => {
     try {

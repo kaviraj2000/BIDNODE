@@ -56,75 +56,132 @@ exports.MarketingAdd = catchAsync(async (req, res, next) => {
     }
 });
 
+// exports.MarketList = catchAsync(async (req, res) => {
+//     try {
+//         // Fetch records from the database
+//         const records = await marketing.find({});
+
+//         // If no records found, return a 404 response
+//         if (!records || records.length === 0) {
+//             return res.status(404).json({
+//                 status: false,
+//                 message: "No markets found.",
+//             });
+//         }
+
+//         // Get current date and time (in Asia/Kolkata timezone for consistency)
+//         const currentDateTime = moment().tz('Asia/Kolkata'); // Ensure you use the correct time zone
+
+//         // Array to hold updated market records
+//         const updatedRecords = [];
+
+//         // Loop through each record
+//         for (let record of records) {
+
+//             // Initialize today's open and close times in the specified time zone
+//             const openTimeToday = moment().tz('Asia/Kolkata');
+//             const closeTimeToday = moment().tz('Asia/Kolkata');
+
+//             // Split open_time and close_time into hours and minutes
+//             const [closeHours, closeMinutes] = record.close_time.split(':');
+
+//             // Set open and close times
+//             openTimeToday.set('hours', 0).set('minutes', 0).set('seconds', 0);
+//             closeTimeToday.set('hours', closeHours).set('minutes', closeMinutes).set('seconds', 0);
+
+//             // Handle the case where the market crosses midnight (e.g., 10 PM to 6 AM)
+//             if (closeTimeToday.isBefore(openTimeToday)) {
+//                 closeTimeToday.add(1, 'days'); // Add one day to close time
+//             }
+
+
+//             // Default status is inactive
+//             let status = "inactive";
+
+//             // Check if the current time is between open_time and close_time
+//             if (currentDateTime.isBetween(openTimeToday, closeTimeToday, null, '[)')) {
+//                 status = "active"; // Market is active during this time
+//             }
+
+
+//             // Update the record with the new market status
+//             const updatedRecord = {
+//                 ...record._doc,  // Keep the original fields
+//                 market_status: status,  // Update the market status
+//             };
+
+//             // Save the updated market status to the database
+//             const updateResult = await marketing.findByIdAndUpdate(record._id, { market_status: status });
+
+//             updatedRecords.push(updatedRecord);  // Add to the updated records array
+//         }
+
+//         // Respond with the updated records
+//         res.status(200).json({
+//             status: true,
+//             data: updatedRecords,
+//             message: "Markets fetched and statuses updated successfully.",
+//         });
+
+//     } catch (error) {
+//         console.error("Error fetching and updating markets:", error);
+//         res.status(500).json({
+//             status: false,
+//             message: "Internal Server Error. Please try again later.",
+//         });
+//     }
+// });
+
 exports.MarketList = catchAsync(async (req, res) => {
     try {
-        // Fetch records from the database
-        const records = await marketing.find({});
+        const todayDate = moment().tz('Asia/Kolkata').format('YYYY-MM-DD');
 
-        // If no records found, return a 404 response
+        // Fetch today's market records
+        const records = await marketing.find({ date: todayDate });
+
         if (!records || records.length === 0) {
             return res.status(404).json({
                 status: false,
-                message: "No markets found.",
+                message: "No markets found for today.",
             });
         }
 
-        // Get current date and time (in Asia/Kolkata timezone for consistency)
-        const currentDateTime = moment().tz('Asia/Kolkata'); // Ensure you use the correct time zone
-
-        // Array to hold updated market records
+        const currentDateTime = moment().tz('Asia/Kolkata');
         const updatedRecords = [];
 
-        // Loop through each record
         for (let record of records) {
-
-            // Initialize today's open and close times in the specified time zone
-            const openTimeToday = moment().tz('Asia/Kolkata');
+            const openTimeToday = moment().tz('Asia/Kolkata').startOf('day');
             const closeTimeToday = moment().tz('Asia/Kolkata');
 
-            // Split open_time and close_time into hours and minutes
             const [closeHours, closeMinutes] = record.close_time.split(':');
+            closeTimeToday.set('hour', closeHours).set('minute', closeMinutes).set('second', 0);
 
-            // Set open and close times
-            openTimeToday.set('hours', 0).set('minutes', 0).set('seconds', 0);
-            closeTimeToday.set('hours', closeHours).set('minutes', closeMinutes).set('seconds', 0);
-
-            // Handle the case where the market crosses midnight (e.g., 10 PM to 6 AM)
             if (closeTimeToday.isBefore(openTimeToday)) {
-                closeTimeToday.add(1, 'days'); // Add one day to close time
+                closeTimeToday.add(1, 'days');
             }
 
-
-            // Default status is inactive
             let status = "inactive";
-
-            // Check if the current time is between open_time and close_time
             if (currentDateTime.isBetween(openTimeToday, closeTimeToday, null, '[)')) {
-                status = "active"; // Market is active during this time
+                status = "active";
             }
 
-
-            // Update the record with the new market status
             const updatedRecord = {
-                ...record._doc,  // Keep the original fields
-                market_status: status,  // Update the market status
+                ...record._doc,
+                market_status: status,
             };
 
-            // Save the updated market status to the database
-            const updateResult = await marketing.findByIdAndUpdate(record._id, { market_status: status });
-
-            updatedRecords.push(updatedRecord);  // Add to the updated records array
+            await marketing.findByIdAndUpdate(record._id, { market_status: status });
+            updatedRecords.push(updatedRecord);
         }
 
-        // Respond with the updated records
         res.status(200).json({
             status: true,
             data: updatedRecords,
-            message: "Markets fetched and statuses updated successfully.",
+            message: "Today's markets fetched and statuses updated successfully.",
         });
 
     } catch (error) {
-        console.error("Error fetching and updating markets:", error);
+        console.error("Error fetching and updating today's markets:", error);
         res.status(500).json({
             status: false,
             message: "Internal Server Error. Please try again later.",
