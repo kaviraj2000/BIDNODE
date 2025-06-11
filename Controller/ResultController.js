@@ -18,9 +18,14 @@ function getDigitalRoot(number) {
 
     return sum;
 }
+function getRecursiveDigitSum(num) {
+    if (!/^\d+$/.test(num)) return 0; // If not a number, return 0
 
-function getDigitSum(num) {
-    return num.toString().split('').reduce((sum, digit) => sum + parseInt(digit), 0);
+    while (num >= 10) {
+        num = num.toString().split('').reduce((sum, digit) => sum + parseInt(digit), 0);
+    }
+
+    return num;
 }
 
 exports.ResultAdd = async (req, res) => {
@@ -55,7 +60,7 @@ exports.ResultAdd = async (req, res) => {
             sangamModal: null,
             userId: null,
             win_manage: "loser",
-            win_rate:0,
+            win_rate: 0,
         };
 
         const sumOfDigits = getDigitalRoot(number);
@@ -84,7 +89,7 @@ exports.ResultAdd = async (req, res) => {
                 resultData.panaaModal = panna;
                 resultData.userId = panna.userId._id;
                 resultData.win_manage = "winner";
-                resultData.win_rate = panna.point ;
+                resultData.win_rate = panna.point;
                 resultData.win_amount = panna.point * (ratesTable[`${panna.type}_rate`] || 1);
                 break;
             }
@@ -97,7 +102,7 @@ exports.ResultAdd = async (req, res) => {
                     resultData.sangamModal = sangam;
                     resultData.userId = sangam.userId._id;
                     resultData.win_manage = "winner";
-                    resultData.win_rate = sangam.bid_point ;
+                    resultData.win_rate = sangam.bid_point;
                     resultData.win_amount = sangam.bid_point * (ratesTable.full_sangam || 1);
                     break;
                 }
@@ -146,32 +151,32 @@ exports.ResultAdd = async (req, res) => {
         // }
 
         if (market) {
-    if (session === 'open') {
-        const openSum = getDigitSum(number);
-        market.result = `${number}-${openSum}x-xxx`;
-    } else if (session === 'close') {
-        if (market.result) {
-            const resultParts = market.result.split('-');
-            if (resultParts.length === 3) {
-                const openNumber = resultParts[0];
-                const openSum = getDigitSum(openNumber);
-                const closeSum = getDigitSum(number);
-                market.result = `${openNumber}-${openSum}${closeSum}-${number}`;
+            if (session === 'open') {
+                const openSum = getRecursiveDigitSum(number);
+                market.result = `${number}-${openSum}x-xxx`;
+            } else if (session === 'close') {
+                if (market.result) {
+                    const resultParts = market.result.split('-');
+                    if (resultParts.length === 3) {
+                        const openNumber = resultParts[0];
+                        const openSum = getRecursiveDigitSum(openNumber);
+                        const closeSum = getRecursiveDigitSum(number);
+                        market.result = `${openNumber}-${openSum}${closeSum}-${number}`;
+                    }
+                } else {
+                    const closeSum = getRecursiveDigitSum(number);
+                    market.result = `xxx-x${closeSum}-${number}`;
+                }
             }
-        } else {
-            const closeSum = getDigitSum(number);
-            market.result = `xxx-x${closeSum}-${number}`;
-        }
-    }
 
-    await market.save();
-    resultData.result = market.result;
-} else {
-    const sum = getDigitSum(number);
-    resultData.result = session === 'open'
-        ? `${number}-${sum}x-xxx`
-        : `xxx-x${sum}-${number}`;
-}
+            await market.save();
+            resultData.result = market.result;
+        } else {
+            const sum = getRecursiveDigitSum(number);
+            resultData.result = session === 'open'
+                ? `${number}-${sum}x-xxx`
+                : `xxx-x${sum}-${number}`;
+        }
 
         const savedResult = await ResultModel.create(resultData);
 
