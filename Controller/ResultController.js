@@ -22,7 +22,8 @@ function getRecursiveDigitSum(num) {
 
 function getFirstDigitOfSum(num) {
     const sum = getRecursiveDigitSum(num);
-    return sum.toString()[0];
+    console.log("Sum of digits:", sum);
+    return sum.toString()[1];
 }
 
 
