@@ -14,36 +14,15 @@ function getSumOfDigits(num) {
     return String(num).split("").reduce((sum, digit) => sum + parseInt(digit), 0);
 }
 
-function getDigitalRoot(number) {
-    let sum = number
-        .toString()
-        .split('')
-        .reduce((acc, digit) => acc + parseInt(digit), 0);
 
-    console.log("sum", sum);
-
+function getRecursiveDigitSum(num) {
+    const sum = num.toString().split("").reduce((acc, val) => acc + parseInt(val), 0);
     return sum;
 }
-function getRecursiveDigitSum(num) {
-    if (!/^\d+$/.test(num)) return 0; // If not a number, return 0
 
-    while (num >= 10) {
-        num = num.toString().split('').reduce((sum, digit) => sum + parseInt(digit), 0);
-    }
-
-    return num;
-}
-function getDigitalRoot(num) {
-    const digits = String(num).split("").map(Number);
-    const sum = digits.reduce((a, b) => a + b, 0);
-    return sum % 10;
-}
-
-function getRecursiveDigitSum(num) {
-    let sum = String(num)
-        .split("")
-        .reduce((acc, val) => acc + parseInt(val), 0);
-    return sum >= 10 ? getRecursiveDigitSum(sum) : sum;
+function getFirstDigitOfSum(num) {
+    const sum = getRecursiveDigitSum(num);
+    return sum.toString()[0];
 }
 
 
@@ -144,33 +123,32 @@ exports.ResultAdd = async (req, res) => {
         let market = await Market.findById(marketId);
         if (market) {
             if (session === "open") {
-                const openSum = getRecursiveDigitSum(number);
-                market.result = `${number}-${openSum}x-xxx`;
+                const openFirstDigit = getFirstDigitOfSum(number);
+                market.result = `${number}-${openFirstDigit}x-xxx`;
             } else if (session === "close") {
                 if (market.result) {
                     const resultParts = market.result.split("-");
                     if (resultParts.length === 3) {
                         const openNumber = resultParts[0];
-                        const openSum = getRecursiveDigitSum(openNumber);
-                        const closeSum = getRecursiveDigitSum(number);
-                        market.result = `${openNumber}-${openSum}${closeSum}-${number}`;
+                        const openFirstDigit = getFirstDigitOfSum(openNumber);
+                        const closeFirstDigit = getFirstDigitOfSum(number);
+                        market.result = `${openNumber}-${openFirstDigit}${closeFirstDigit}-${number}`;
                     }
                 } else {
-                    const closeSum = getRecursiveDigitSum(number);
-                    market.result = `xxx-x${closeSum}-${number}`;
+                    const closeFirstDigit = getFirstDigitOfSum(number);
+                    market.result = `xxx-x${closeFirstDigit}-${number}`;
                 }
             }
 
             await market.save();
             resultData.result = market.result;
         } else {
-            const sum = getRecursiveDigitSum(number);
+            const firstDigit = getFirstDigitOfSum(number);
             resultData.result =
                 session === "open"
-                    ? `${number}-${sum}x-xxx`
-                    : `xxx-x${sum}-${number}`;
+                    ? `${number}-${firstDigit}x-xxx`
+                    : `xxx-x${firstDigit}-${number}`;
         }
-
         console.log("resultData", resultData);
         const savedResult = await ResultModel.create(resultData);
 
@@ -252,38 +230,6 @@ exports.ResultList = catchAsync(async (req, res) => {
     }
 });
 
-// exports.ResultAddMarket = async (req, res) => {
-//     try {
-//         const { marketId } = req.body;
-//         if (!marketId) {
-//             return res.status(400).json({ message: "Market ID is required." });
-//         }
-//         const marketResult = await ResultModel.find({ marketId });
-
-//         if (!marketResult || marketResult.length === 0) {
-//             return res.status(404).json({ message: "Market results not found." });
-//         }
-//         const market = await Market.findById(marketId); // Find the Market model by ID
-//         if (!market) {
-//             return res.status(404).json({ message: "Market not found." });
-//         }
-//         const sangamData = await Sangam.find({ marketId });
-//         const combinedData = {
-//             marketName: market.name,
-//             marketResults: marketResult
-//         };
-//         return res.status(200).json({
-//             status: 200,
-//             message: "Result fetched successfully.",
-//             data: combinedData
-//         });
-//     } catch (error) {
-//         console.error("Error fetching result:", error);
-//         res.status(500).json({ message: "An error occurred while fetching the result." });
-//     }
-// };
-
-
 exports.ResultAddMarket = async (req, res) => {
     try {
         const { marketId } = req.body;
@@ -329,8 +275,6 @@ exports.ResultAddMarket = async (req, res) => {
         res.status(500).json({ message: "An error occurred while fetching the result." });
     }
 };
-
-
 
 exports.ResultUser = async (req, res) => {
     try {

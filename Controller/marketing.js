@@ -132,63 +132,6 @@ exports.MarketList = catchAsync(async (req, res) => {
     }
 });
 
-// exports.MarketList = catchAsync(async (req, res) => {
-//     try {
-//         const todayDate = moment().tz('Asia/Kolkata').format('YYYY-MM-DD');
-
-//         // Fetch today's market records
-//         const records = await marketing.find({ date: todayDate });
-
-//         if (!records || records.length === 0) {
-//             return res.status(404).json({
-//                 status: false,
-//                 message: "No markets found for today.",
-//             });
-//         }
-
-//         const currentDateTime = moment().tz('Asia/Kolkata');
-//         const updatedRecords = [];
-
-//         for (let record of records) {
-//             const openTimeToday = moment().tz('Asia/Kolkata').startOf('day');
-//             const closeTimeToday = moment().tz('Asia/Kolkata');
-
-//             const [closeHours, closeMinutes] = record.close_time.split(':');
-//             closeTimeToday.set('hour', closeHours).set('minute', closeMinutes).set('second', 0);
-
-//             if (closeTimeToday.isBefore(openTimeToday)) {
-//                 closeTimeToday.add(1, 'days');
-//             }
-
-//             let status = "inactive";
-//             if (currentDateTime.isBetween(openTimeToday, closeTimeToday, null, '[)')) {
-//                 status = "active";
-//             }
-
-//             const updatedRecord = {
-//                 ...record._doc,
-//                 market_status: status,
-//             };
-
-//             await marketing.findByIdAndUpdate(record._id, { market_status: status });
-//             updatedRecords.push(updatedRecord);
-//         }
-
-//         res.status(200).json({
-//             status: true,
-//             data: updatedRecords,
-//             message: "Today's markets fetched and statuses updated successfully.",
-//         });
-
-//     } catch (error) {
-//         console.error("Error fetching and updating today's markets:", error);
-//         res.status(500).json({
-//             status: false,
-//             message: "Internal Server Error. Please try again later.",
-//         });
-//     }
-// });
-
 exports.MarketListStatus = catchAsync(async (req, res) => {
     try {
         // Fetch records and sort by creation date in descending order (latest first)
