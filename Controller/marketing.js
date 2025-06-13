@@ -116,7 +116,7 @@ exports.MarketList = catchAsync(async (req, res) => {
             updatedRecords.push(updatedRecord);  // Add to the updated records array
         }
 
-        // Respond with the updated records
+        console.log(updatedRecords);        // Respond with the updated records
         res.status(200).json({
             status: true,
             data: updatedRecords,
@@ -358,7 +358,7 @@ exports.MarketUpdateData = catchAsync(async (req, res, next) => {
         const updatedRecord = await marketing.findByIdAndUpdate(
             Id,
             {
-                market_status: market_status, // Directly update the market status
+                status: market_status, // Directly update the market status
             },
             { new: true, runValidators: true }
         );

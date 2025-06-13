@@ -1,8 +1,9 @@
 const dotenv = require("dotenv");
 require("./utils/mongoconfig");
 dotenv.config();
-require('./Cronjob');
 
+const cron = require('node-cron');
+const MarketModel = require("./Models/Marketing"); // Adjust path as needed
 const user = require("./Models/SignUp")
 const Marketing = require("./Models/Marketing")
 const widthrwalModel = require("./Models/Widthwral")
@@ -52,8 +53,8 @@ app.get('/api/user-stats', async (req, res) => {
     const widthrwalModels = await widthrwalModel.countDocuments();
     const paymentsucees = await widthrwalModel.countDocuments({ payment_status: 1 });
     const paymentwidthrwal = await widthrwalModel.countDocuments({ payment_status: 0 });
-    const UserData = await userModel.find({role :"subadmin"});
-    const ProfileData = await userModel.find({role :"admin"});
+    const UserData = await userModel.find({ role: "subadmin" });
+    const ProfileData = await userModel.find({ role: "admin" });
 
     const approvedUsers = await user.countDocuments({ user_status: 'active' });
     const unapprovedUsers = await user.countDocuments({ user_status: 'inactive' });
@@ -73,6 +74,36 @@ app.get('/api/user-stats', async (req, res) => {
     res.status(500).json({ error: 'Error retrieving user statistics' });
   }
 });
+
+
+
+// ⏰ Run daily at 8:50 PM IST
+cron.schedule("15 21 * * *", async () => {
+  console.log("🕗 Ruuning cron")
+  try {
+    console.log("🕗 Running market result update at 8:50 PM...");
+
+    const markets = await MarketModel.find();
+
+    for (const market of markets) {
+
+      await MarketModel.findByIdAndUpdate(
+        market._id,
+        { result: "xxx-xx-xxx" },
+        { new: true }
+      );
+
+      console.log(`✅ ${market.name} updated with result: "xxx-xx-xxx" `);
+    }
+
+    console.log("🎉 All market results updated successfully at 8:50 PM!");
+  } catch (err) {
+    console.error("❌ Error while updating market results:", err);
+  }
+}, {
+  timezone: "Asia/Kolkata" // ✅ Move options to 3rd argument
+});
+
 
 // Start server
 const PORT = process.env.PORT || 5000;
